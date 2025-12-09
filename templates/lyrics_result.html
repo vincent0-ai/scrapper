@@ -15,7 +15,7 @@
         <pre id="lyrics-text">{{ result.lyrics }}</pre>
     </div>
     <div class="card-footer">
-        <button class="btn btn-info" onclick="copyLyrics()">Copy Lyrics</button>
+        <button id="copy-lyrics-btn" class="btn btn-info">Copy Lyrics</button>
         <form action="/download_lyrics" method="post" style="display: inline;">
             <input type="hidden" name="title" value="{{ result.title }}">
             <input type="hidden" name="lyrics" value="{{ result.lyrics }}">
@@ -23,13 +23,4 @@
         </form>
     </div>
 </div>
-
-<script>
-function copyLyrics() {
-    const lyricsText = document.getElementById('lyrics-text').innerText;
-    navigator.clipboard.writeText(lyricsText).then(() => {
-        alert('Lyrics copied to clipboard!');
-    });
-}
-</script>
 {% endblock %}

@@ -1,144 +1,139 @@
 {% extends 'base.html' %}
 
-{% block title %}Dashboard{% endblock %}
+{% block title %}Web Scraper{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Search for Song Lyrics</h5>
-                <form id="lyrics-form" action="/search_lyrics" method="post">
-                    <div class="mb-3">
-                        <label for="lyrics-query" class="form-label">Song Title or Artist</label>
-                        <input type="text" class="form-control" id="lyrics-query" name="query" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary" id="lyrics-submit">
-                        <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
-                        Search Lyrics
-                    </button>
-                </form>
-                <div id="lyrics-result" class="mt-3"></div>
+<div class="container mt-5">
+    <h1 class="mb-4 text-center">Web Scraper</h1>
+
+    <div class="row">
+        <!-- Lyrics Scraper Card -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4>Lyrics Scraper</h4>
+                </div>
+                <div class="card-body">
+                    <form id="lyrics-form">
+                        <div class="input-group mb-3">
+                            <input type="text" name="query" class="form-control" placeholder="Enter song title or artist" required>
+                            <button class="btn btn-primary" type="submit">Search Lyrics</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Medium Scraper Card -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4>Medium Article Scraper</h4>
+                </div>
+                <div class="card-body">
+                    <form id="medium-form">
+                        <div class="input-group mb-3">
+                            <input type="url" name="url" class="form-control" placeholder="Enter Medium.com article URL" required>
+                            <button class="btn btn-primary" type="submit">Scrape Article</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Scrape Medium Article</h5>
-                <form id="medium-form" action="/scrape_medium" method="post">
-                    <div class="mb-3">
-                        <label for="medium-url" class="form-label">Medium Article URL</label>
-                        <input type="url" class="form-control" id="medium-url" name="url" placeholder="https://medium.com/..." required>
-                    </div>
-                    <button type="submit" class="btn btn-secondary" id="medium-submit">
-                        <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
-                        Scrape Article
-                    </button>
-                </form>
-                <div id="medium-result" class="mt-3"></div>
-            </div>
-        </div>
+
+    <!-- Results Area -->
+    <div id="results-area" class="mt-4">
+        <!-- JS will inject loading messages and results here -->
     </div>
 </div>
 
 <script>
-function pollTaskStatus(task_id, resultDiv, submitBtn, spinner) {
-    const interval = setInterval(function() {
-        $.ajax({
-            url: '/status/' + task_id,
-            dataType: 'json',
-            success: function(data) {
-                if (data.state === 'SUCCESS') {
-                    clearInterval(interval);
-                    resultDiv.html(data.result);
-                    submitBtn.prop('disabled', false);
-                    spinner.addClass('d-none');
-                } else if (data.state === 'FAILED') {
-                    clearInterval(interval);
-                    resultDiv.html('<div class="alert alert-danger">An error occurred: ' + data.status + '</div>');
-                    submitBtn.prop('disabled', false);
-                    spinner.addClass('d-none');
-                }
-                // If PENDING, the loop will continue
-            },
-            error: function() {
-                clearInterval(interval);
-                resultDiv.html('<div class="alert alert-danger">An error occurred while checking the task status.</div>');
-                submitBtn.prop('disabled', false);
-                spinner.addClass('d-none');
+    const lyricsForm = document.getElementById('lyrics-form');
+    const mediumForm = document.getElementById('medium-form');
+    const resultsArea = document.getElementById('results-area');
+
+    lyricsForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        handleFormSubmit('/search_lyrics', formData);
+    });
+
+    mediumForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        handleFormSubmit('/scrape_medium', formData);
+    });
+
+    function handleFormSubmit(url, formData) {
+        // 1. Show a "processing" message
+        resultsArea.innerHTML = `
+            <div class="card">
+                <div class="card-body text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Processing your request... This may take a moment.</p>
+                </div>
+            </div>
+        `;
+
+        // 2. Send the request to the backend
+        fetch(url, {
+            method: 'POST',
+            body: formData,
+        })
+        .then(response => response.json())
+        .then(data => {
+            // 3. Handle the initial response
+            if (data.status === 'SUCCESS') {
+                // Result was in cache, display it immediately
+                resultsArea.innerHTML = data.result;
+            } else if (data.status === 'PENDING') {
+                // Job started, begin polling
+                pollJobStatus(data.task_id);
+            } else {
+                // Handle any other initial errors
+                resultsArea.innerHTML = `<div class="alert alert-danger">${data.error || 'An unknown error occurred.'}</div>`;
             }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            resultsArea.innerHTML = `<div class="alert alert-danger">Failed to submit the request. Please try again.</div>`;
         });
-    }, 2000); // Poll every 2 seconds
-}
+    }
 
+    function pollJobStatus(jobId) {
+        const interval = setInterval(() => {
+            fetch(`/status/${jobId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.state === 'SUCCESS') {
+                        clearInterval(interval);
+                        resultsArea.innerHTML = data.result;
+                    } else if (data.state === 'FAILED') {
+                        clearInterval(interval);
+                        resultsArea.innerHTML = `<div class="alert alert-danger">${data.status || 'The job failed.'}</div>`;
+                    }
+                    // If state is 'PENDING', we do nothing and just wait for the next poll.
+                })
+                .catch(error => {
+                    clearInterval(interval);
+                    console.error('Polling Error:', error);
+                    resultsArea.innerHTML = `<div class="alert alert-danger">An error occurred while checking the job status.</div>`;
+                });
+        }, 3000); // Poll every 3 seconds
+    }
 
-$(document).ready(function() {
-    $('#lyrics-form').on('submit', function(e) {
-        e.preventDefault();
-        const form = $(this);
-        const submitBtn = $('#lyrics-submit');
-        const spinner = submitBtn.find('.spinner-border');
-        const resultDiv = $('#lyrics-result');
-
-        submitBtn.prop('disabled', true);
-        spinner.removeClass('d-none');
-        resultDiv.html('<div class="alert alert-info">Sending request...</div>');
-
-        $.post('/search_lyrics', form.serialize())
-            .done(function(data) {
-                if (data.status === 'SUCCESS') {
-                    resultDiv.html(data.result);
-                    submitBtn.prop('disabled', false);
-                    spinner.addClass('d-none');
-                } else if (data.status === 'PENDING') {
-                    resultDiv.html('<div class="alert alert-info">Request received. Processing...</div>');
-                    pollTaskStatus(data.task_id, resultDiv, submitBtn, spinner);
-                } else {
-                    resultDiv.html('<div class="alert alert-danger">' + (data.error || 'An unknown error occurred.') + '</div>');
-                    submitBtn.prop('disabled', false);
-                    spinner.addClass('d-none');
-                }
-            })
-            .fail(function() {
-                resultDiv.html('<div class="alert alert-danger">An error occurred while searching for lyrics.</div>');
-                submitBtn.prop('disabled', false);
-                spinner.addClass('d-none');
+    // This makes the dynamically added "Copy" and "Download" buttons work
+    document.addEventListener('click', function(e) {
+        if (e.target && e.target.id === 'copy-lyrics-btn') {
+            const lyricsText = document.getElementById('lyrics-text').innerText;
+            navigator.clipboard.writeText(lyricsText).then(() => {
+                alert('Lyrics copied to clipboard!');
             });
+        }
     });
 
-    $('#medium-form').on('submit', function(e) {
-        e.preventDefault();
-        const form = $(this);
-        const submitBtn = $('#medium-submit');
-        const spinner = submitBtn.find('.spinner-border');
-        const resultDiv = $('#medium-result');
-
-        submitBtn.prop('disabled', true);
-        spinner.removeClass('d-none');
-        resultDiv.html('<div class="alert alert-info">Sending request...</div>');
-
-        $.post('/scrape_medium', form.serialize())
-            .done(function(data) {
-                if (data.status === 'SUCCESS') {
-                    resultDiv.html(data.result);
-                    submitBtn.prop('disabled', false);
-                    spinner.addClass('d-none');
-                } else if (data.status === 'PENDING') {
-                    resultDiv.html('<div class="alert alert-info">Request received. Processing...</div>');
-                    pollTaskStatus(data.task_id, resultDiv, submitBtn, spinner);
-                } else {
-                    resultDiv.html('<div class="alert alert-danger">' + (data.error || 'An unknown error occurred.') + '</div>');
-                    submitBtn.prop('disabled', false);
-                    spinner.addClass('d-none');
-                }
-            })
-            .fail(function() {
-                resultDiv.html('<div class="alert alert-danger">An error occurred while scraping the article.</div>');
-                submitBtn.prop('disabled', false);
-                spinner.addClass('d-none');
-            });
-    });
-});
 </script>
 {% endblock %}

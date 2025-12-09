@@ -14,7 +14,7 @@ q = Queue(connection=conn)
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index.html') # This now points to our new file
 
 @app.route('/search_lyrics', methods=['POST'])
 def search_lyrics():
