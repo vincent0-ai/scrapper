@@ -63,26 +63,23 @@ def job_status(job_id):
     job = q.fetch_job(job_id)
     if job:
         if job.is_finished:
-            if job.result is not None: # Check if job.result is not None
-                # Defensive check: Ensure expected fields are strings before rendering
-                if isinstance(job.result, dict):
-                    for key in ['title', 'lyrics', 'content', 'artist', 'source', 'author', 'published', 'tags', 'url']:
-                        if key in job.result:
-                            if callable(job.result[key]):
-                                job.result[key] = f"Invalid {key.capitalize()} (method object found)"
-                            elif not isinstance(job.result[key], str):
-                                job.result[key] = str(job.result[key])
-
+            result = job.result
+            if result and not result.get("error"):
                 template_name = job.meta.get('template_name', 'lyrics_result.html')
                 if template_name == 'lyrics_result.html':
-                    # Pass the potentially sanitized result
-                    html = render_template(template_name, result=job.result) 
+                    html = render_template(template_name, result=result)
                 else:
-                    html = render_template(template_name, article=job.result)
+                    html = render_template(template_name, article=result)
+                response = {'state': 'SUCCESS', 'result': html}
+            elif result and result.get("error"):
+                # If the scraper returned a specific error message
+                error_message = result.get("error", "An unknown error occurred.")
+                html = f'<div class="alert alert-danger">{error_message}</div>'
                 response = {'state': 'SUCCESS', 'result': html}
             else:
-                # Job finished successfully, but the scraper found nothing.
-                response = {'state': 'SUCCESS', 'result': '<div class="alert alert-warning">No results found.</div>'}
+                # This case handles when job.result is None or has no content
+                html = '<div class="alert alert-warning">No content was found for the given URL. Please check the URL and try again.</div>'
+                response = {'state': 'SUCCESS', 'result': html}
         elif job.is_failed:
             response = {'state': 'FAILED', 'status': 'Job failed.'}
         else:
