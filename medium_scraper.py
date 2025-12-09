@@ -58,12 +58,14 @@ class MediumScraper:
         tags = [t.get_text(strip=True) for t in soup.find_all("a", attrs={"data-testid": "topicTag"})]
         
         # More robust content extraction for Medium articles
-        article_body = soup.find("article") or soup.find("div", class_="postArticle-content")
+        # Medium often uses a <section> with a specific data-field attribute for the main content.
+        article_body = soup.find("section", attrs={"data-field": "body"})
         if article_body:
             paragraphs = article_body.find_all("p")
+            # Join paragraphs with double newlines to preserve paragraph breaks
             content = "\n\n".join(p.get_text(strip=True) for p in paragraphs)
         else:
-            # Fallback if specific article body selectors don't work
+            # Fallback if the primary selector doesn't work
             content = "\n\n".join(p.get_text(strip=True) for p in soup.find_all("p"))
             
         return {"title": title_text, "author": author_text, "published": publish_text, "tags": tags, "content": content}
