@@ -93,12 +93,20 @@ def _search_scrape(query, site_config):
         return None
 
     song_soup = BeautifulSoup(song_html, "html.parser")
-    title = song_soup.title.string if song_soup.title else "Unknown Title"
+    
+    # Use the configured title_selector instead of the generic <title> tag
+    title_element = song_soup.select_one(site_config["title_selector"])
+    title = title_element.get_text(strip=True) if title_element else "Unknown Title"
+
+    # Use the configured artist_selector (if available)
+    artist_element = song_soup.select_one(site_config.get("artist_selector", ""))
+    artist = artist_element.get_text(strip=True) if artist_element else "Unknown Artist"
+
     lyrics_container = song_soup.select_one(site_config["lyrics_container_selector"])
     
     if lyrics_container:
         lyrics_text = lyrics_container.get_text(separator='\n', strip=True)
-        lyrics_data = {"title": title, "lyrics": lyrics_text, "source": urljoin(song_url, '/')}
+        lyrics_data = {"title": title, "artist": artist, "lyrics": lyrics_text, "source": urljoin(song_url, '/')}
         db_manager.save_lyrics(query, lyrics_data) # Save to DB
         return lyrics_data
     return None

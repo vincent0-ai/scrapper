@@ -3,8 +3,8 @@ import io
 import os
 import redis
 from rq import Queue
-from db import db_manager
-from worker import scrape_lyrics, scrape_medium
+from db import db_manager # Assuming db_manager is correctly implemented and handles data storage/retrieval
+from worker import scrape_lyrics, scrape_medium as worker_scrape_medium # Renamed to avoid conflict
 
 app = Flask(__name__)
 
@@ -25,10 +25,20 @@ def search_lyrics():
     # Try to get from DB first
     cached_result = db_manager.get_lyrics(query)
     if cached_result:
-        cached_result.pop('_id', None)
+        cached_result.pop('_id', None) # Remove MongoDB's internal _id field if present
+        # Defensive check: Ensure expected fields are strings before rendering
+        if isinstance(cached_result, dict):
+            for key in ['title', 'lyrics', 'artist', 'source']:
+                if key in cached_result:
+                    if callable(cached_result[key]):
+                        cached_result[key] = f"Invalid {key.capitalize()} (method object found)"
+                    elif not isinstance(cached_result[key], str):
+                        cached_result[key] = str(cached_result[key])
+
         return jsonify({"status": "SUCCESS", "result": render_template('lyrics_result.html', result=cached_result)})
 
     # If not in DB, start a background job
+    # Enqueue the actual worker function, not the Flask route handler
     job = q.enqueue(scrape_lyrics, query, job_timeout=3600, meta={'template_name': 'lyrics_result.html'})
     return jsonify({"status": "PENDING", "task_id": job.get_id()})
 
@@ -45,7 +55,7 @@ def scrape_medium():
         return jsonify({"status": "SUCCESS", "result": render_template('medium_result.html', article=cached_result)})
 
     # If not in DB, start a background job
-    job = q.enqueue(scrape_medium, url, job_timeout=3600, meta={'template_name': 'medium_result.html'})
+    job = q.enqueue(worker_scrape_medium, url, job_timeout=3600, meta={'template_name': 'medium_result.html'})
     return jsonify({"status": "PENDING", "task_id": job.get_id()})
 
 @app.route('/status/<job_id>')
@@ -53,10 +63,20 @@ def job_status(job_id):
     job = q.fetch_job(job_id)
     if job:
         if job.is_finished:
-            if job.result:
+            if job.result is not None: # Check if job.result is not None
+                # Defensive check: Ensure expected fields are strings before rendering
+                if isinstance(job.result, dict):
+                    for key in ['title', 'lyrics', 'content', 'artist', 'source', 'author', 'published', 'tags', 'url']:
+                        if key in job.result:
+                            if callable(job.result[key]):
+                                job.result[key] = f"Invalid {key.capitalize()} (method object found)"
+                            elif not isinstance(job.result[key], str):
+                                job.result[key] = str(job.result[key])
+
                 template_name = job.meta.get('template_name', 'lyrics_result.html')
                 if template_name == 'lyrics_result.html':
-                    html = render_template(template_name, result=job.result)
+                    # Pass the potentially sanitized result
+                    html = render_template(template_name, result=job.result) 
                 else:
                     html = render_template(template_name, article=job.result)
                 response = {'state': 'SUCCESS', 'result': html}
@@ -75,8 +95,19 @@ def job_status(job_id):
 @app.route('/download_lyrics', methods=['POST'])
 def download_lyrics():
     title = request.form.get('title', 'lyrics')
+    # Ensure title is a string and safe for filenames
+    if not isinstance(title, str):
+        title = str(title)
+    # Sanitize title for use as a filename
+    title = "".join(c for c in title if c.isalnum() or c in (' ', '.', '_')).rstrip()
+    if not title: # Fallback if sanitization results in an empty string
+        title = 'lyrics'
+
     lyrics = request.form.get('lyrics', '')
-    
+    # Ensure lyrics is a string
+    if not isinstance(lyrics, str):
+        lyrics = str(lyrics)
+
     buffer = io.BytesIO()
     buffer.write(lyrics.encode('utf-8'))
     buffer.seek(0)
