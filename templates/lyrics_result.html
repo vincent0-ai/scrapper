@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Lyrics for {{ result.title }}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3>{{ result.title }}</h3>
+        {% if result.artist %}
+            <p class="text-muted">{{ result.artist }}</p>
+        {% endif %}
+        <small>Source: {{ result.source }}</small>
+    </div>
+    <div class="card-body">
+        <pre id="lyrics-text">{{ result.lyrics }}</pre>
+    </div>
+    <div class="card-footer">
+        <button class="btn btn-info" onclick="copyLyrics()">Copy Lyrics</button>
+        <form action="/download_lyrics" method="post" style="display: inline;">
+            <input type="hidden" name="title" value="{{ result.title }}">
+            <input type="hidden" name="lyrics" value="{{ result.lyrics }}">
+            <button type="submit" class="btn btn-success">Download .txt</button>
+        </form>
+    </div>
+</div>
+
+<script>
+function copyLyrics() {
+    const lyricsText = document.getElementById('lyrics-text').innerText;
+    navigator.clipboard.writeText(lyricsText).then(() => {
+        alert('Lyrics copied to clipboard!');
+    });
+}
+</script>
+{% endblock %}

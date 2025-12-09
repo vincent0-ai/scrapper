@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Search for Song Lyrics</h5>
+                <form id="lyrics-form" action="/search_lyrics" method="post">
+                    <div class="mb-3">
+                        <label for="lyrics-query" class="form-label">Song Title or Artist</label>
+                        <input type="text" class="form-control" id="lyrics-query" name="query" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="lyrics-submit">
+                        <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                        Search Lyrics
+                    </button>
+                </form>
+                <div id="lyrics-result" class="mt-3"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Scrape Medium Article</h5>
+                <form id="medium-form" action="/scrape_medium" method="post">
+                    <div class="mb-3">
+                        <label for="medium-url" class="form-label">Medium Article URL</label>
+                        <input type="url" class="form-control" id="medium-url" name="url" placeholder="https://medium.com/..." required>
+                    </div>
+                    <button type="submit" class="btn btn-secondary" id="medium-submit">
+                        <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                        Scrape Article
+                    </button>
+                </form>
+                <div id="medium-result" class="mt-3"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    $('#lyrics-form').on('submit', function(e) {
+        e.preventDefault();
+        const form = $(this);
+        const submitBtn = $('#lyrics-submit');
+        const spinner = submitBtn.find('.spinner-border');
+        const resultDiv = $('#lyrics-result');
+
+        submitBtn.prop('disabled', true);
+        spinner.removeClass('d-none');
+        resultDiv.html('<div class="alert alert-info">Searching for lyrics...</div>');
+
+        $.post('/search_lyrics', form.serialize())
+            .done(function(data) {
+                resultDiv.html(data);
+            })
+            .fail(function() {
+                resultDiv.html('<div class="alert alert-danger">An error occurred while searching for lyrics.</div>');
+            })
+            .always(function() {
+                submitBtn.prop('disabled', false);
+                spinner.addClass('d-none');
+            });
+    });
+
+    $('#medium-form').on('submit', function(e) {
+        e.preventDefault();
+        const form = $(this);
+        const submitBtn = $('#medium-submit');
+        const spinner = submitBtn.find('.spinner-border');
+        const resultDiv = $('#medium-result');
+
+        submitBtn.prop('disabled', true);
+        spinner.removeClass('d-none');
+        resultDiv.html('<div class="alert alert-info">Scraping article...</div>');
+
+        $.post('/scrape_medium', form.serialize())
+            .done(function(data) {
+                resultDiv.html(data);
+            })
+            .fail(function() {
+                resultDiv.html('<div class="alert alert-danger">An error occurred while scraping the article.</div>');
+            })
+            .always(function() {
+                submitBtn.prop('disabled', false);
+                spinner.addClass('d-none');
+            });
+    });
+});
+</script>
+{% endblock %}

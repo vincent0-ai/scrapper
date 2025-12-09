@@ -1,0 +1,13 @@
+Flask
+requests
+beautifulsoup4
+schedule # For scraper_service.py
+gunicorn # For production web server
+pymongo # For MongoDB database interaction
+celery # For background tasks
+redis # For message broker for Celery
+
+# Note: This project now requires a running Redis server.
+# You can install it with:
+# sudo apt-get install redis-server (for Debian/Ubuntu)
+# or follow instructions at https://redis.io/docs/getting-started/installation/

@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}Scraped Article: {{ article.title }}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3>{{ article.title }}</h3>
+        <p class="text-muted">By: {{ article.author }} | Published: {{ article.published }}</p>
+        <p>URL: <a href="{{ article.url }}" target="_blank">{{ article.url }}</a></p>
+        {% if article.tags %}
+            <p>Tags: 
+            {% for tag in article.tags %}
+                <span class="badge bg-secondary">{{ tag }}</span>
+            {% endfor %}
+            </p>
+        {% endif %}
+    </div>
+    <div class="card-body">
+        <p>{{ article.content }}</p>
+    </div>
+</div>
+{% endblock %}
