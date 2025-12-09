@@ -4,7 +4,7 @@ import os
 import redis
 from rq import Queue
 from db import db_manager # Assuming db_manager is correctly implemented and handles data storage/retrieval
-from worker import scrape_lyrics, scrape_medium as worker_scrape_medium # Renamed to avoid conflict
+from worker import scrape_lyrics, scrape_medium as worker_scrape_medium, update_proxies as worker_update_proxies # Renamed to avoid conflict
 
 app = Flask(__name__)
 
@@ -58,6 +58,12 @@ def scrape_medium():
     job = q.enqueue(worker_scrape_medium, url, job_timeout=3600, meta={'template_name': 'medium_result.html'})
     return jsonify({"status": "PENDING", "task_id": job.get_id()})
 
+@app.route('/update_proxies', methods=['POST'])
+def update_proxies_route():
+    # Enqueue the proxy update job
+    job = q.enqueue(worker_update_proxies, job_timeout=3600, meta={'template_name': 'proxy_result.html'})
+    return jsonify({"status": "PENDING", "task_id": job.get_id()})
+
 @app.route('/status/<job_id>')
 def job_status(job_id):
     job = q.fetch_job(job_id)
@@ -68,6 +74,8 @@ def job_status(job_id):
                 template_name = job.meta.get('template_name', 'lyrics_result.html')
                 if template_name == 'lyrics_result.html':
                     html = render_template(template_name, result=result)
+                elif template_name == 'proxy_result.html':
+                    html = f'<div class="alert alert-success">{result.get("message", "Proxies updated!")}</div>'
                 else:
                     html = render_template(template_name, article=result)
                 response = {'state': 'SUCCESS', 'result': html}

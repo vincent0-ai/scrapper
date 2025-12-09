@@ -29,7 +29,7 @@ def update_proxies():
     """
     Updates the proxy list.
     """
-    scrape_and_save_proxies()
+    return scrape_and_save_proxies()
 
 
 if __name__ == '__main__':
