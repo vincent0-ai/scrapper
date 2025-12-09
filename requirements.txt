@@ -5,6 +5,7 @@ gunicorn # For production web server
 pymongo # For MongoDB database interaction
 redis # For message broker
 rq # For background tasks
+honcho
 
 # Note: This project now requires a running Redis server.
 # You can install it with:
