@@ -42,6 +42,22 @@
         </div>
     </div>
 
+    <div class="row">
+        <!-- Proxy Scraper Card -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4>Proxy Scraper</h4>
+                </div>
+                <div class="card-body">
+                    <form id="proxy-form">
+                        <button class="btn btn-info" type="submit">Update Proxies</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Results Area -->
     <div id="results-area" class="mt-4">
         <!-- JS will inject loading messages and results here -->
@@ -51,6 +67,7 @@
 <script>
     const lyricsForm = document.getElementById('lyrics-form');
     const mediumForm = document.getElementById('medium-form');
+    const proxyForm = document.getElementById('proxy-form');
     const resultsArea = document.getElementById('results-area');
 
     lyricsForm.addEventListener('submit', function(e) {
@@ -63,6 +80,12 @@
         e.preventDefault();
         const formData = new FormData(this);
         handleFormSubmit('/scrape_medium', formData);
+    });
+
+    proxyForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this); // No form data needed for proxy update, but keep for consistency
+        handleFormSubmit('/update_proxies', formData);
     });
 
     function handleFormSubmit(url, formData) {
