@@ -1,10 +1,16 @@
 from flask import Flask, render_template, request, jsonify, send_file
-from lyrics_scraper import search_song
-from medium_scraper import MediumScraper
 import io
-from db import db_manager # Import the database manager
+import os
+import redis
+from rq import Queue
+from db import db_manager
+from worker import scrape_lyrics, scrape_medium
 
 app = Flask(__name__)
+
+redis_url = os.getenv('REDIS_URL', 'redis://localhost:6379')
+conn = redis.from_url(redis_url)
+q = Queue(connection=conn)
 
 @app.route('/')
 def index():
@@ -14,54 +20,57 @@ def index():
 def search_lyrics():
     query = request.form.get('query')
     if not query:
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return jsonify({"error": "Search query is required."}), 400
         return jsonify({"error": "Search query is required."}), 400
 
     # Try to get from DB first
     cached_result = db_manager.get_lyrics(query)
     if cached_result:
-        cached_result.pop('_id', None) # Remove MongoDB's internal _id field before passing to template
-        html = render_template('lyrics_result.html', result=cached_result)
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return html
-        return render_template('lyrics_result.html', result=cached_result)
+        cached_result.pop('_id', None)
+        return jsonify({"status": "SUCCESS", "result": render_template('lyrics_result.html', result=cached_result)})
 
-    # If not in DB or expired, scrape
-    scraped_result = search_song(query)
-    if scraped_result:
-        # The search_song function now handles saving to DB internally
-        html = render_template('lyrics_result.html', result=scraped_result)
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return html
-        return render_template('lyrics_result.html', result=scraped_result)
-    else:
-        error_html = "<h1>No lyrics found.</h1>"
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return error_html
-        return error_html
+    # If not in DB, start a background job
+    job = q.enqueue(scrape_lyrics, query, job_timeout=3600, meta={'template_name': 'lyrics_result.html'})
+    return jsonify({"status": "PENDING", "task_id": job.get_id()})
 
 @app.route('/scrape_medium', methods=['POST'])
 def scrape_medium():
     url = request.form.get('url')
     if not url:
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return jsonify({"error": "Medium URL is required."}), 400
         return jsonify({"error": "Medium URL is required."}), 400
 
-    # MediumScraper.scrape_single handles DB caching internally now
-    result = MediumScraper().scrape_single(url)
+    # Try to get from DB first
+    cached_result = db_manager.get_article(url)
+    if cached_result:
+        cached_result.pop('_id', None)
+        return jsonify({"status": "SUCCESS", "result": render_template('medium_result.html', article=cached_result)})
 
-    if result and not result.get('error'):
-        html = render_template('medium_result.html', article=result)
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return html
-        return render_template('medium_result.html', article=result)
+    # If not in DB, start a background job
+    job = q.enqueue(scrape_medium, url, job_timeout=3600, meta={'template_name': 'medium_result.html'})
+    return jsonify({"status": "PENDING", "task_id": job.get_id()})
+
+@app.route('/status/<job_id>')
+def job_status(job_id):
+    job = q.fetch_job(job_id)
+    if job:
+        if job.is_finished:
+            if job.result:
+                template_name = job.meta.get('template_name', 'lyrics_result.html')
+                if template_name == 'lyrics_result.html':
+                    html = render_template(template_name, result=job.result)
+                else:
+                    html = render_template(template_name, article=job.result)
+                response = {'state': 'SUCCESS', 'result': html}
+            else:
+                # Job finished successfully, but the scraper found nothing.
+                response = {'state': 'SUCCESS', 'result': '<div class="alert alert-warning">No results found.</div>'}
+        elif job.is_failed:
+            response = {'state': 'FAILED', 'status': 'Job failed.'}
+        else:
+            response = {'state': 'PENDING', 'status': 'Job is still running.'}
     else:
-        error_html = f"<h1>Failed to scrape Medium article.</h1><p>{result.get('error', '')}</p>"
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return error_html
-        return error_html
+        response = {'state': 'FAILED', 'status': 'Job not found.'}
+    return jsonify(response)
+
 
 @app.route('/download_lyrics', methods=['POST'])
 def download_lyrics():

@@ -1,11 +1,10 @@
 Flask
 requests
 beautifulsoup4
-schedule # For scraper_service.py
 gunicorn # For production web server
 pymongo # For MongoDB database interaction
-celery # For background tasks
-redis # For message broker for Celery
+redis # For message broker
+rq # For background tasks
 
 # Note: This project now requires a running Redis server.
 # You can install it with:

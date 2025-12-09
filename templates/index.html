@@ -43,6 +43,36 @@
 </div>
 
 <script>
+function pollTaskStatus(task_id, resultDiv, submitBtn, spinner) {
+    const interval = setInterval(function() {
+        $.ajax({
+            url: '/status/' + task_id,
+            dataType: 'json',
+            success: function(data) {
+                if (data.state === 'SUCCESS') {
+                    clearInterval(interval);
+                    resultDiv.html(data.result);
+                    submitBtn.prop('disabled', false);
+                    spinner.addClass('d-none');
+                } else if (data.state === 'FAILED') {
+                    clearInterval(interval);
+                    resultDiv.html('<div class="alert alert-danger">An error occurred: ' + data.status + '</div>');
+                    submitBtn.prop('disabled', false);
+                    spinner.addClass('d-none');
+                }
+                // If PENDING, the loop will continue
+            },
+            error: function() {
+                clearInterval(interval);
+                resultDiv.html('<div class="alert alert-danger">An error occurred while checking the task status.</div>');
+                submitBtn.prop('disabled', false);
+                spinner.addClass('d-none');
+            }
+        });
+    }, 2000); // Poll every 2 seconds
+}
+
+
 $(document).ready(function() {
     $('#lyrics-form').on('submit', function(e) {
         e.preventDefault();
@@ -53,16 +83,25 @@ $(document).ready(function() {
 
         submitBtn.prop('disabled', true);
         spinner.removeClass('d-none');
-        resultDiv.html('<div class="alert alert-info">Searching for lyrics...</div>');
+        resultDiv.html('<div class="alert alert-info">Sending request...</div>');
 
         $.post('/search_lyrics', form.serialize())
             .done(function(data) {
-                resultDiv.html(data);
+                if (data.status === 'SUCCESS') {
+                    resultDiv.html(data.result);
+                    submitBtn.prop('disabled', false);
+                    spinner.addClass('d-none');
+                } else if (data.status === 'PENDING') {
+                    resultDiv.html('<div class="alert alert-info">Request received. Processing...</div>');
+                    pollTaskStatus(data.task_id, resultDiv, submitBtn, spinner);
+                } else {
+                    resultDiv.html('<div class="alert alert-danger">' + (data.error || 'An unknown error occurred.') + '</div>');
+                    submitBtn.prop('disabled', false);
+                    spinner.addClass('d-none');
+                }
             })
             .fail(function() {
                 resultDiv.html('<div class="alert alert-danger">An error occurred while searching for lyrics.</div>');
-            })
-            .always(function() {
                 submitBtn.prop('disabled', false);
                 spinner.addClass('d-none');
             });
@@ -77,16 +116,25 @@ $(document).ready(function() {
 
         submitBtn.prop('disabled', true);
         spinner.removeClass('d-none');
-        resultDiv.html('<div class="alert alert-info">Scraping article...</div>');
+        resultDiv.html('<div class="alert alert-info">Sending request...</div>');
 
         $.post('/scrape_medium', form.serialize())
             .done(function(data) {
-                resultDiv.html(data);
+                if (data.status === 'SUCCESS') {
+                    resultDiv.html(data.result);
+                    submitBtn.prop('disabled', false);
+                    spinner.addClass('d-none');
+                } else if (data.status === 'PENDING') {
+                    resultDiv.html('<div class="alert alert-info">Request received. Processing...</div>');
+                    pollTaskStatus(data.task_id, resultDiv, submitBtn, spinner);
+                } else {
+                    resultDiv.html('<div class="alert alert-danger">' + (data.error || 'An unknown error occurred.') + '</div>');
+                    submitBtn.prop('disabled', false);
+                    spinner.addClass('d-none');
+                }
             })
             .fail(function() {
                 resultDiv.html('<div class="alert alert-danger">An error occurred while scraping the article.</div>');
-            })
-            .always(function() {
                 submitBtn.prop('disabled', false);
                 spinner.addClass('d-none');
             });
