@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-FLARE = os.environ.get("FLARE_URL", "https://localhost:3000/v1") # FlareSolverr URL
+FLARE = os.environ.get("FLARE_URL") # FlareSolverr URL
 CACHE_DIR = "cache"
 TTL = 3600  # 1 hour
 

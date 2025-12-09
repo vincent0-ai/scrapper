@@ -8,7 +8,7 @@ from worker import scrape_lyrics, scrape_medium
 
 app = Flask(__name__)
 
-redis_url = os.getenv('REDIS_URL', 'redis://localhost:6379')
+redis_url = os.getenv('REDIS_URL')
 conn = redis.from_url(redis_url)
 q = Queue(connection=conn)
 

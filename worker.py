@@ -8,7 +8,7 @@ from proxy_scraper import scrape_and_save_proxies
 
 listen = ['high', 'default', 'low']
 
-redis_url = os.getenv('REDIS_URL', 'redis://localhost:6379')
+redis_url = os.getenv('REDIS_URL')
 
 conn = redis.from_url(redis_url)
 

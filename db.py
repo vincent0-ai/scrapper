@@ -3,7 +3,7 @@ from pymongo import MongoClient
 from datetime import datetime, timedelta
 
 # Environment variables for MongoDB connection
-MONGO_URI = os.environ.get("MONGO_URI", "mongodb://localhost:27017/")
+MONGO_URL = os.environ.get("MONGO_URL")
 DB_NAME = os.environ.get("DB_NAME", "scrapper_db")
 
 # TTL for database entries (e.g., 7 days)
@@ -21,9 +21,9 @@ class MongoDBManager:
 
     def _connect(self):
         try:
-            self.client = MongoClient(MONGO_URI)
+            self.client = MongoClient(MONGO_URL)
             self.db = self.client[DB_NAME]
-            print(f"Connected to MongoDB: {MONGO_URI}, database: {DB_NAME}")
+            print(f"Connected to MongoDB: {MONGO_URL}, database: {DB_NAME}")
             self._setup_indexes()
         except Exception as e:
             print(f"Error connecting to MongoDB: {e}")

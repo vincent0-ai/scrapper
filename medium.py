@@ -19,7 +19,7 @@ def get_random_proxy():
 
 
 class MediumScraper:
-    def __init__(self, concurrency: int = 4, flaresolverr_url: str = os.getenv("FLARE_URL", "http://localhost:8191/v1")):
+    def __init__(self, concurrency: int = 4, flaresolverr_url: str = os.getenv("FLARE_URL")):
         self.concurrency = concurrency
         self.session = requests.Session()
         self.flaresolverr_url = flaresolverr_url
