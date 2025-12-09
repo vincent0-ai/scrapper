@@ -1,6 +1,6 @@
 import os
 import redis
-from rq import Worker, Queue, Connection
+from rq import Worker, Queue
 
 from lyrics_scraper import search_song
 from medium_scraper import MediumScraper
@@ -33,6 +33,6 @@ def update_proxies():
 
 
 if __name__ == '__main__':
-    with Connection(conn):
-        worker = Worker(map(Queue, listen))
-        worker.work()
+    queues = [Queue(q, connection=conn) for q in listen]
+    worker = Worker(queues, connection=conn)
+    worker.work()
