@@ -2,7 +2,7 @@ import json
 from concurrent.futures import ThreadPoolExecutor
 from typing import List, Dict
 import random
-
+import os
 import requests
 from bs4 import BeautifulSoup
 
@@ -19,7 +19,7 @@ def get_random_proxy():
 
 
 class MediumScraper:
-    def __init__(self, concurrency: int = 4, flaresolverr_url: str = "https://flaresolve.captain.echowithin.xyz/v1"):
+    def __init__(self, concurrency: int = 4, flaresolverr_url: str = os.getenv("FLARE_URL", "http://localhost:8191/v1")):
         self.concurrency = concurrency
         self.session = requests.Session()
         self.flaresolverr_url = flaresolverr_url

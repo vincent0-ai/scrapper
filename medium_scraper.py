@@ -1,7 +1,7 @@
 import json
 from concurrent.futures import ThreadPoolExecutor
 from typing import List, Dict
-
+import os
 import requests
 from bs4 import BeautifulSoup
 from common import fetch_with_flaresolverr, get_random_proxy  # Import common utilities
@@ -12,7 +12,7 @@ from db import db_manager # Import the database manager
 class MediumScraper:
     def __init__(self, concurrency: int = 4):
         self.concurrency = concurrency
-        self.flaresolverr_url = "http://flaresolve.captain.echowithin.xyz:8191/v1" 
+        self.flaresolverr_url = os.getenv("FLARE_URL", "http://localhost:8191/v1") 
         self.session = requests.Session()
         self.headers = {
             "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36",
