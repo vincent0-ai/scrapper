@@ -5,44 +5,53 @@ from db import db_manager
 
 class RedditScraper:
     def scrape_single(self, url):
-        # Check DB first
+        # Check cache
         cached_data = db_manager.get_reddit_thread(url)
         if cached_data:
-            cached_data.pop('_id', None)
+            cached_data.pop("_id", None)
             return cached_data
 
-        # Ensure we use old.reddit.com for easier HTML parsing
+        # Force old.reddit.com
         parsed = urlparse(url)
-        # Replace domain with old.reddit.com
-        scrape_url = parsed._replace(netloc='old.reddit.com').geturl()
+        scrape_url = parsed._replace(netloc="old.reddit.com").geturl()
 
-        html_content, _ = fetch_with_flaresolverr(scrape_url)
+        # Fetch HTML
+        data = fetch_with_flaresolverr(scrape_url)
+        html_content = data.get("solution", {}).get("response")
         if not html_content:
             return {"error": "Failed to fetch Reddit content."}
 
         soup = BeautifulSoup(html_content, "html.parser")
-        
-        # Extract Post Data
+
+        # Find main post container
         site_table = soup.find("div", id="siteTable")
         if not site_table:
-             return {"error": "Could not find post content structure."}
-             
-        if not site_table.has_attr("data-type") or site_table["data-type"] != "link":
-             return {"error": "Could not find post element."}
+            return {"error": "Could not find post content structure."}
 
-        title_elm = site_table.find("a", class_="title may-blank loggedin")
+        # Find post element ("thing")
+        thing = site_table.find("div", class_="thing")
+        if not thing:
+            return {"error": "Could not locate post element."}
+
+        # Title
+        title_elm = thing.find("a", class_="title")
         title = title_elm.get_text(strip=True) if title_elm else "Unknown Title"
-        
-        author_elm = site_table.find("p", class_="tagline")
-        author = author_elm.get_text(strip=True) if author_elm else "Unknown Author"
-        
-        entry = site_table.find("div", class_="entry unvoted")
-        usertext = entry.find("div", class_="usertext-body may-blank-within md-container ") if entry else None
+
+        # Author
+        tagline = thing.find("p", class_="tagline")
+        author = tagline.get_text(strip=True) if tagline else "Unknown Author"
+
+        # Content (selftext)
+        entry = thing.find("div", class_="entry")
+        usertext = entry.select_one("div.usertext-body") if entry else None
         content = usertext.get_text("\n", strip=True) if usertext else ""
 
-        if not title or not author or not content:
-            return {"error": "Could not find post content."}
+        result = {
+            "title": title,
+            "author": author,
+            "content": content,
+            "url": url
+        }
 
-        result = {"title": title, "author": author, "content": content, "url": url}
         db_manager.save_reddit_thread(url, result)
         return result
