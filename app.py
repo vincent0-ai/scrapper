@@ -18,7 +18,7 @@ def index():
 
 @app.route('/search_lyrics', methods=['POST'])
 def search_lyrics():
-    query = request.form.get('query')
+    query = request.form.get('query').lower()
     if not query:
         return jsonify({"error": "Search query is required."}), 400
 

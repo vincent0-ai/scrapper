@@ -57,7 +57,7 @@ def fetch_with_flaresolverr(url):
         payload["proxy"] = f"http://{proxy}"
 
     try:
-        r = requests.post(FLARE, json=payload, timeout=40)
+        r = requests.post(FLARE, json=payload, timeout=20)
         r.raise_for_status()
         data = r.json()
         if data.get("status") == "ok":
