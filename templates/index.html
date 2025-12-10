@@ -43,6 +43,23 @@
     </div>
 
     <div class="row">
+        <!-- Reddit Scraper Card -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4>Reddit Thread Scraper</h4>
+                </div>
+                <div class="card-body">
+                    <form id="reddit-form">
+                        <div class="input-group mb-3">
+                            <input type="url" name="url" class="form-control" placeholder="Enter Reddit thread URL" required>
+                            <button class="btn btn-primary" type="submit">Scrape Thread</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
         <!-- Proxy Scraper Card -->
         <div class="col-md-6">
             <div class="card mb-4">
@@ -67,6 +84,7 @@
 <script>
     const lyricsForm = document.getElementById('lyrics-form');
     const mediumForm = document.getElementById('medium-form');
+    const redditForm = document.getElementById('reddit-form');
     const proxyForm = document.getElementById('proxy-form');
     const resultsArea = document.getElementById('results-area');
 
@@ -80,6 +98,12 @@
         e.preventDefault();
         const formData = new FormData(this);
         handleFormSubmit('/scrape_medium', formData);
+    });
+
+    redditForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        handleFormSubmit('/scrape_reddit', formData);
     });
 
     proxyForm.addEventListener('submit', function(e) {
