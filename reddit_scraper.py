@@ -16,8 +16,7 @@ class RedditScraper:
         scrape_url = parsed._replace(netloc="old.reddit.com").geturl()
 
         # Fetch HTML
-        data = fetch_with_flaresolverr(scrape_url)
-        html_content = data.get("solution", {}).get("response")
+        html_content, _ = fetch_with_flaresolverr(scrape_url)
         if not html_content:
             return {"error": "Failed to fetch Reddit content."}
 
