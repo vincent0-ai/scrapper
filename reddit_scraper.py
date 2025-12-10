@@ -41,27 +41,9 @@ class RedditScraper:
         usertext = entry.find("div", class_="usertext-body may-blank-within md-container ") if entry else None
         content = usertext.get_text("\n", strip=True) if usertext else ""
 
-        # Extract Comments
-        comments = []
-        comment_area = soup.find("div", class_="commentarea")
-        if comment_area:
-            # We only take top-level comments for simplicity
-            sitetable_comments = comment_area.find("div", class_="sitetable nestedlisting")
-            if sitetable_comments:
-                # recursive=False to get only direct children (top level comments)
-                comment_things = sitetable_comments.find_all("div", class_="usertext-body may-blank-within md-container ", recursive=False)
-                for comm in comment_things:
-                    if "comment" not in comm.get("class", []):
-                        continue
-                    
-                    c_entry = comm.find("div", class_="entry")
-                    if not c_entry: continue
-                    
-                    c_usertext = c_entry.find("div", class_="usertext-body")
-                    c_text = c_usertext.get_text("\n", strip=True) if c_usertext else ""
-                    
-                    comments.append({"text": c_text})
+        if not title or not author or not content:
+            return {"error": "Could not find post content."}
 
-        result = {"title": title, "author": author, "content": content, "comments": comments, "url": url}
+        result = {"title": title, "author": author, "content": content, "url": url}
         db_manager.save_reddit_thread(url, result)
         return result
