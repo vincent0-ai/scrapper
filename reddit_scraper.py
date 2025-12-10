@@ -27,17 +27,16 @@ class RedditScraper:
         if not site_table:
              return {"error": "Could not find post content structure."}
              
-        thing = site_table.find("div", class_="thing")
-        if not thing:
+        if not site_table.has_attr("data-type") or site_table["data-type"] != "link":
              return {"error": "Could not find post element."}
 
-        title_elm = thing.find("a", class_="title may-blank loggedin")
+        title_elm = site_table.find("a", class_="title may-blank loggedin")
         title = title_elm.get_text(strip=True) if title_elm else "Unknown Title"
         
-        author_elm = thing.find("p", class_="tagline")
+        author_elm = site_table.find("p", class_="tagline")
         author = author_elm.get_text(strip=True) if author_elm else "Unknown Author"
         
-        entry = thing.find("div", class_="entry unvoted")
+        entry = site_table.find("div", class_="entry unvoted")
         usertext = entry.find("div", class_="usertext-body may-blank-within md-container ") if entry else None
         content = usertext.get_text("\n", strip=True) if usertext else ""
 
