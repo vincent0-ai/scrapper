@@ -31,14 +31,14 @@ class RedditScraper:
         if not thing:
              return {"error": "Could not find post element."}
 
-        title_elm = thing.find("a", class_="title")
+        title_elm = thing.find("a", class_="title may-blank loggedin")
         title = title_elm.get_text(strip=True) if title_elm else "Unknown Title"
         
-        author_elm = thing.find("a", class_="author")
+        author_elm = thing.find("p", class_="tagline")
         author = author_elm.get_text(strip=True) if author_elm else "Unknown Author"
         
-        entry = thing.find("div", class_="entry")
-        usertext = entry.find("div", class_="usertext-body") if entry else None
+        entry = thing.find("div", class_="entry unvoted")
+        usertext = entry.find("div", class_="usertext-body may-blank-within md-container ") if entry else None
         content = usertext.get_text("\n", strip=True) if usertext else ""
 
         # Extract Comments
@@ -49,7 +49,7 @@ class RedditScraper:
             sitetable_comments = comment_area.find("div", class_="sitetable nestedlisting")
             if sitetable_comments:
                 # recursive=False to get only direct children (top level comments)
-                comment_things = sitetable_comments.find_all("div", class_="thing", recursive=False)
+                comment_things = sitetable_comments.find_all("div", class_="usertext-body may-blank-within md-container ", recursive=False)
                 for comm in comment_things:
                     if "comment" not in comm.get("class", []):
                         continue
@@ -57,13 +57,10 @@ class RedditScraper:
                     c_entry = comm.find("div", class_="entry")
                     if not c_entry: continue
                     
-                    c_author_elm = c_entry.find("a", class_="author")
-                    c_author = c_author_elm.get_text(strip=True) if c_author_elm else "[deleted]"
-                    
                     c_usertext = c_entry.find("div", class_="usertext-body")
                     c_text = c_usertext.get_text("\n", strip=True) if c_usertext else ""
                     
-                    comments.append({"author": c_author, "text": c_text})
+                    comments.append({"text": c_text})
 
         result = {"title": title, "author": author, "content": content, "comments": comments, "url": url}
         db_manager.save_reddit_thread(url, result)
