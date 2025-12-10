@@ -5,7 +5,6 @@ from rq import Worker, Queue
 from lyrics_scraper import search_song
 from medium_scraper import MediumScraper
 from proxy_scraper import scrape_and_save_proxies
-from reddit_scraper import RedditScraper
 
 listen = ['high', 'default', 'low']
 
@@ -24,13 +23,6 @@ def scrape_medium(url):
     Scrapes a Medium article.
     """
     scraper = MediumScraper()
-    return scraper.scrape_single(url)
-
-def scrape_reddit(url):
-    """
-    Scrapes a Reddit thread.
-    """
-    scraper = RedditScraper()
     return scraper.scrape_single(url)
 
 def update_proxies():

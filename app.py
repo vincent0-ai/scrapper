@@ -1,11 +1,10 @@
 from flask import Flask, render_template, request, jsonify, send_file
 import io
-import json
 import os
 import redis
 from rq import Queue
 from db import db_manager # Assuming db_manager is correctly implemented and handles data storage/retrieval
-from worker import scrape_lyrics, scrape_medium as worker_scrape_medium, update_proxies as worker_update_proxies, scrape_reddit as worker_scrape_reddit # Renamed to avoid conflict
+from worker import scrape_lyrics, scrape_medium as worker_scrape_medium, update_proxies as worker_update_proxies # Renamed to avoid conflict
 
 app = Flask(__name__)
 
@@ -59,22 +58,6 @@ def scrape_medium():
     job = q.enqueue(worker_scrape_medium, url, job_timeout=3600, meta={'template_name': 'medium_result.html'})
     return jsonify({"status": "PENDING", "task_id": job.get_id()})
 
-@app.route('/scrape_reddit', methods=['POST'])
-def scrape_reddit():
-    url = request.form.get('url')
-    if not url:
-        return jsonify({"error": "Reddit URL is required."}), 400
-
-    # Try to get from DB first
-    cached_result = db_manager.get_reddit_thread(url)
-    if cached_result:
-        cached_result.pop('_id', None)
-        return jsonify({"status": "SUCCESS", "result": render_template('reddit_result.html', thread=cached_result)})
-
-    # If not in DB, start a background job
-    job = q.enqueue(worker_scrape_reddit, url, job_timeout=3600, meta={'template_name': 'reddit_result.html'})
-    return jsonify({"status": "PENDING", "task_id": job.get_id()})
-
 @app.route('/update_proxies', methods=['POST'])
 def update_proxies_route():
     # Enqueue the proxy update job
@@ -93,8 +76,6 @@ def job_status(job_id):
                     html = render_template(template_name, result=result)
                 elif template_name == 'proxy_result.html':
                     html = f'<div class="alert alert-success">{result.get("message", "Proxies updated!")}</div>'
-                elif template_name == 'reddit_result.html':
-                    html = render_template(template_name, thread=result)
                 else:
                     html = render_template(template_name, article=result)
                 response = {'state': 'SUCCESS', 'result': html}
@@ -137,29 +118,6 @@ def download_lyrics():
     buffer.seek(0)
     
     return send_file(buffer, as_attachment=True, download_name=f'{title}.txt', mimetype='text/plain')
-
-@app.route('/download_reddit', methods=['POST'])
-def download_reddit():
-    url = request.form.get('url')
-    if not url:
-        return "URL is required", 400
-
-    thread_data = db_manager.get_reddit_thread(url)
-    if not thread_data:
-        return "Thread data not found.", 404
-
-    thread_data.pop('_id', None)
-    thread_data.pop('timestamp', None) # Remove datetime object which is not JSON serializable
-
-    title = thread_data.get('title', 'reddit_thread')
-    safe_title = "".join(c for c in title if c.isalnum() or c in (' ', '.', '_')).rstrip()
-    filename = f"{safe_title[:50]}.json"
-
-    buffer = io.BytesIO()
-    buffer.write(json.dumps(thread_data, indent=4).encode('utf-8'))
-    buffer.seek(0)
-
-    return send_file(buffer, as_attachment=True, download_name=filename, mimetype='application/json')
 
 if __name__ == '__main__':
     app.run(debug=True)

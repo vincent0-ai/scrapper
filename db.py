@@ -40,10 +40,6 @@ class MongoDBManager:
             self.db.articles.create_index([("url", 1)], unique=True)
             self.db.articles.create_index([("timestamp", 1)], expireAfterSeconds=DB_TTL_DAYS * 24 * 60 * 60)
 
-            # Index for reddit threads collection, unique by url, with TTL
-            self.db.reddit_threads.create_index([("url", 1)], unique=True)
-            self.db.reddit_threads.create_index([("timestamp", 1)], expireAfterSeconds=DB_TTL_DAYS * 24 * 60 * 60)
-            
             print("MongoDB TTL indexes created/updated.")
 
     def get_lyrics(self, query):
@@ -61,14 +57,6 @@ class MongoDBManager:
     def save_article(self, url, article_data):
         if self.db is None: return
         self.db.articles.update_one({"url": url}, {"$set": {**article_data, "url": url, "timestamp": datetime.now()}}, upsert=True)
-
-    def get_reddit_thread(self, url):
-        if self.db is None: return None
-        return self.db.reddit_threads.find_one({"url": url})
-
-    def save_reddit_thread(self, url, thread_data):
-        if self.db is None: return
-        self.db.reddit_threads.update_one({"url": url}, {"$set": {**thread_data, "url": url, "timestamp": datetime.now()}}, upsert=True)
 
 # Initialize the DB manager globally
 db_manager = MongoDBManager()
