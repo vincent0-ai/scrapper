@@ -51,38 +51,43 @@ def fetch_with_flaresolverr(url):
     if cached_data:
         return cached_data
 
-    proxy = get_random_proxy()
-    payload = {"cmd": "request.get", "url": url, "maxTimeout": 30000}
-    if proxy:
-        payload["proxy"] = f"http://{proxy}"
+    # Retry mechanism to handle bad proxies and timeouts
+    max_retries = 3
+    for attempt in range(max_retries):
+        proxy = get_random_proxy()
+        payload = {"cmd": "request.get", "url": url, "maxTimeout": 30000}
+        if proxy:
+            payload["proxy"] = f"http://{proxy}"
 
-    try:
-        r = requests.post(FLARE, json=payload, timeout=20)
-        r.raise_for_status()
-        data = r.json()
-        if data.get("status") == "ok":
-            html, cookies = data["solution"]["response"], data["solution"]["cookies"]
+        try:
+            # Increased timeout to 60s to exceed FlareSolverr's maxTimeout of 30s
+            r = requests.post(FLARE, json=payload, timeout=60)
+            r.raise_for_status()
+            data = r.json()
+            if data.get("status") == "ok":
+                html, cookies = data["solution"]["response"], data["solution"]["cookies"]
+                _save_cache(url, html, cookies)
+                return html, cookies
+            # If FlareSolverr returns not ok, fallback to direct request
+            print(f"FlareSolverr returned non-ok status (attempt {attempt+1}/{max_retries}), falling back to direct request")
+        except requests.exceptions.RequestException as e:
+            print(f"Error communicating with FlareSolverr (attempt {attempt+1}/{max_retries}): {e}, falling back to direct request")
+
+        # Fallback to direct request
+        try:
+            headers = {
+                "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            }
+            proxies = None
+            if proxy:
+                proxies = {"http": f"http://{proxy}", "https": f"http://{proxy}"}
+            r = requests.get(url, headers=headers, proxies=proxies, timeout=30)
+            r.raise_for_status()
+            html = r.text
+            cookies = dict(r.cookies)
             _save_cache(url, html, cookies)
             return html, cookies
-        # If FlareSolverr returns not ok, fallback to direct request
-        print("FlareSolverr returned non-ok status, falling back to direct request")
-    except requests.exceptions.RequestException as e:
-        print(f"Error communicating with FlareSolverr: {e}, falling back to direct request")
-
-    # Fallback to direct request
-    try:
-        headers = {
-            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-        }
-        proxies = None
-        if proxy:
-            proxies = {"http": f"http://{proxy}", "https": f"http://{proxy}"}
-        r = requests.get(url, headers=headers, proxies=proxies, timeout=20)
-        r.raise_for_status()
-        html = r.text
-        cookies = dict(r.cookies)
-        _save_cache(url, html, cookies)
-        return html, cookies
-    except requests.exceptions.RequestException as e:
-        print(f"Direct request also failed: {e}")
-        return None, None
+        except requests.exceptions.RequestException as e:
+            print(f"Direct request also failed (attempt {attempt+1}/{max_retries}): {e}")
+            
+    return None, None
