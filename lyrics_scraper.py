@@ -22,9 +22,15 @@ SITES = {
         "title_selector": "h6",
         "artist_selector": "p",
         "lyrics_container_selector": "div.col-8",
-        # Note: lyricshymn.com seems to be a dead domain or parked page.
-        # The scraper might not work for this site.
-        # For the purpose of this exercise, I'll assume it's a valid target.
+    },
+    "sifalyrics": {
+        "search_url": "https://www.sifalyrics.com/search?q={query}",
+        "type": "scrape",
+        "result_selector": "article.card.wow.fadeInLeft.animation-delay-5.mb-4",
+        "link_selector": "a",
+        "title_selector": "h3.a",
+        "artist_selector": "h3.a",
+        "lyrics_container_selector": "div.material-card",
     },
     "simpmusic": {
         "search_url": "https://api-lyrics.simpmusic.org/v1/search?q={query}",
