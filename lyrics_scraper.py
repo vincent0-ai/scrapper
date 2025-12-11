@@ -117,17 +117,37 @@ def search_simpmusic_only(query, search_type="song"):
     """
     Dedicated function to search SimpMusic API.
     """
-    url = "https://api-lyrics.simpmusic.org/v1/search"
+    base_url = "https://api-lyrics.simpmusic.org/v1/search"
+
+    if search_type == "artist":
+        url = f"{base_url}/artist"
+        params = {"artist": query}
+    elif search_type == "title" or search_type == "song":
+        url = f"{base_url}/title"
+        params = {"title": query}
+    else:
+        url = base_url
+        params = {"q": query}
+
     try:
         # Using requests params to handle encoding and query construction
-        r = requests.get(url, params={"q": query, "type": search_type}, timeout=20)
+        r = requests.get(url, params=params, timeout=20)
         r.raise_for_status()
         data = r.json()
         
-        if data and data.get("lyrics"):
-            lyrics_data = {"title": data.get("title", query), "artist": data.get("artist", "Unknown"), "lyrics": data["lyrics"], "source": "SimpMusic API"}
-            db_manager.save_lyrics(query, lyrics_data)
-            return lyrics_data
+        if data.get("success") and data.get("data") and len(data["data"]) > 0:
+            first_result = data["data"][0]
+            lyrics_data = {
+                "title": first_result.get("songTitle", query),
+                "artist": first_result.get("artistName", "Unknown"),
+                "lyrics": first_result.get("plainLyric", ""),
+                "source": "SimpMusic API"
+            }
+            
+            if lyrics_data["lyrics"]:
+                db_manager.save_lyrics(query, lyrics_data)
+                return lyrics_data
+
         return {"error": "No lyrics found via SimpMusic API."}
     except requests.exceptions.RequestException as e:
         return {"error": f"SimpMusic API Error: {str(e)}"}
