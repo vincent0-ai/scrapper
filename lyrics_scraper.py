@@ -32,10 +32,6 @@ SITES = {
         "artist_selector": "h3.a",
         "lyrics_container_selector": "div.material-card",
     },
-    "simpmusic": {
-        "search_url": "https://api-lyrics.simpmusic.org/v1/search?q={query}",
-        "type": "api",
-    }
 }
 
 from db import db_manager # Import the database manager
@@ -116,3 +112,22 @@ def _search_scrape(query, site_config):
         db_manager.save_lyrics(query, lyrics_data) # Save to DB
         return lyrics_data
     return None
+
+def search_simpmusic_only(query, search_type="song"):
+    """
+    Dedicated function to search SimpMusic API.
+    """
+    url = "https://api-lyrics.simpmusic.org/v1/search"
+    try:
+        # Using requests params to handle encoding and query construction
+        r = requests.get(url, params={"q": query, "type": search_type}, timeout=20)
+        r.raise_for_status()
+        data = r.json()
+        
+        if data and data.get("lyrics"):
+            lyrics_data = {"title": data.get("title", query), "artist": data.get("artist", "Unknown"), "lyrics": data["lyrics"], "source": "SimpMusic API"}
+            db_manager.save_lyrics(query, lyrics_data)
+            return lyrics_data
+        return {"error": "No lyrics found via SimpMusic API."}
+    except requests.exceptions.RequestException as e:
+        return {"error": f"SimpMusic API Error: {str(e)}"}

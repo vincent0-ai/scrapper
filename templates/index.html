@@ -43,6 +43,28 @@
     </div>
 
     <div class="row">
+        <!-- SimpMusic API Card -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4>SimpMusic API</h4>
+                </div>
+                <div class="card-body">
+                    <form id="simpmusic-form">
+                        <div class="input-group mb-3">
+                            <select class="form-select" name="type" style="max-width: 120px;">
+                                <option value="song" selected>Song</option>
+                                <option value="artist">Artist</option>
+                                <option value="album">Album</option>
+                            </select>
+                            <input type="text" name="query" class="form-control" placeholder="Enter artist, song, etc." required>
+                            <button class="btn btn-success" type="submit">Search Music</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
         <!-- Proxy Scraper Card -->
         <div class="col-md-6">
             <div class="card mb-4">
@@ -68,12 +90,19 @@
     const lyricsForm = document.getElementById('lyrics-form');
     const mediumForm = document.getElementById('medium-form');
     const proxyForm = document.getElementById('proxy-form');
+    const simpmusicForm = document.getElementById('simpmusic-form');
     const resultsArea = document.getElementById('results-area');
 
     lyricsForm.addEventListener('submit', function(e) {
         e.preventDefault();
         const formData = new FormData(this);
         handleFormSubmit('/search_lyrics', formData);
+    });
+
+    simpmusicForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        handleFormSubmit('/search_simpmusic', formData);
     });
 
     mediumForm.addEventListener('submit', function(e) {

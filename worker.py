@@ -2,7 +2,7 @@ import os
 import redis
 from rq import Worker, Queue
 
-from lyrics_scraper import search_song
+from lyrics_scraper import search_song, search_simpmusic_only
 from medium_scraper import MediumScraper
 from proxy_scraper import scrape_and_save_proxies
 
@@ -17,6 +17,12 @@ def scrape_lyrics(query):
     Scrapes for song lyrics.
     """
     return search_song(query)
+
+def search_simpmusic(query, search_type):
+    """
+    Searches SimpMusic API specifically.
+    """
+    return search_simpmusic_only(query, search_type)
 
 def scrape_medium(url):
     """

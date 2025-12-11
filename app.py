@@ -4,7 +4,7 @@ import os
 import redis
 from rq import Queue
 from db import db_manager # Assuming db_manager is correctly implemented and handles data storage/retrieval
-from worker import scrape_lyrics, scrape_medium as worker_scrape_medium, update_proxies as worker_update_proxies # Renamed to avoid conflict
+from worker import scrape_lyrics, scrape_medium as worker_scrape_medium, update_proxies as worker_update_proxies, search_simpmusic as worker_search_simpmusic
 
 app = Flask(__name__)
 
@@ -40,6 +40,16 @@ def search_lyrics():
     # If not in DB, start a background job
     # Enqueue the actual worker function, not the Flask route handler
     job = q.enqueue(scrape_lyrics, query, job_timeout=3600, meta={'template_name': 'lyrics_result.html'})
+    return jsonify({"status": "PENDING", "task_id": job.get_id()})
+
+@app.route('/search_simpmusic', methods=['POST'])
+def search_simpmusic():
+    query = request.form.get('query')
+    search_type = request.form.get('type', 'song')
+    if not query:
+        return jsonify({"error": "Search query is required."}), 400
+
+    job = q.enqueue(worker_search_simpmusic, query, search_type, job_timeout=3600, meta={'template_name': 'lyrics_result.html'})
     return jsonify({"status": "PENDING", "task_id": job.get_id()})
 
 @app.route('/scrape_medium', methods=['POST'])
