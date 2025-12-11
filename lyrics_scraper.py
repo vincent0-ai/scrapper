@@ -132,4 +132,6 @@ def search_simpmusic_only(query, search_type="song"):
                 return {"error": "SimpMusic API Rate Limit Exceeded. Please try again later."}
             if e.response.status_code == 503:
                 return {"error": "SimpMusic API Service Unavailable. Please try again later."}
+            if e.response.status_code == 404:
+                return {"error": "No lyrics found via SimpMusic API."}
         return {"error": f"SimpMusic API Error: {str(e)}"}
