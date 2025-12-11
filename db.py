@@ -40,6 +40,15 @@ class MongoDBManager:
             self.db.articles.create_index([("url", 1)], unique=True)
             self.db.articles.create_index([("timestamp", 1)], expireAfterSeconds=DB_TTL_DAYS * 24 * 60 * 60)
 
+            # Index for search history - ordered by timestamp
+            self.db.search_history.create_index([("timestamp", -1)])
+            self.db.search_history.create_index([("type", 1), ("timestamp", -1)])
+
+            # Index for favorites - ordered by timestamp
+            self.db.favorites.create_index([("timestamp", -1)])
+            self.db.favorites.create_index([("type", 1), ("timestamp", -1)])
+            self.db.favorites.create_index([("item_id", 1)], unique=True)
+
             print("MongoDB TTL indexes created/updated.")
 
     def get_lyrics(self, query):
@@ -57,6 +66,54 @@ class MongoDBManager:
     def save_article(self, url, article_data):
         if self.db is None: return
         self.db.articles.update_one({"url": url}, {"$set": {**article_data, "url": url, "timestamp": datetime.now()}}, upsert=True)
+
+    def add_to_search_history(self, search_type, query, metadata=None):
+        if self.db is None: return
+        history_entry = {
+            "type": search_type,  # 'lyrics', 'medium', 'simpmusic'
+            "query": query,
+            "timestamp": datetime.now(),
+            "metadata": metadata or {}
+        }
+        self.db.search_history.insert_one(history_entry)
+
+    def get_search_history(self, search_type=None, limit=20):
+        if self.db is None: return []
+        query_filter = {"type": search_type} if search_type else {}
+        return list(self.db.search_history.find(query_filter).sort("timestamp", -1).limit(limit))
+
+    def clear_search_history(self, search_type=None):
+        if self.db is None: return
+        query_filter = {"type": search_type} if search_type else {}
+        self.db.search_history.delete_many(query_filter)
+
+    def add_to_favorites(self, item_type, item_id, title, metadata=None):
+        if self.db is None: return
+        favorite_entry = {
+            "type": item_type,  # 'lyrics', 'medium'
+            "item_id": item_id,  # url or query
+            "title": title,
+            "timestamp": datetime.now(),
+            "metadata": metadata or {}
+        }
+        self.db.favorites.update_one(
+            {"item_id": item_id},
+            {"$set": favorite_entry},
+            upsert=True
+        )
+
+    def remove_from_favorites(self, item_id):
+        if self.db is None: return
+        self.db.favorites.delete_one({"item_id": item_id})
+
+    def get_favorites(self, item_type=None, limit=100):
+        if self.db is None: return []
+        query_filter = {"type": item_type} if item_type else {}
+        return list(self.db.favorites.find(query_filter).sort("timestamp", -1).limit(limit))
+
+    def is_favorite(self, item_id):
+        if self.db is None: return False
+        return self.db.favorites.find_one({"item_id": item_id}) is not None
 
 # Initialize the DB manager globally
 db_manager = MongoDBManager()

@@ -4,12 +4,29 @@
 
 {% block content %}
 <div class="card">
-    <div class="card-header">
-        <h3>{{ result.title }}</h3>
-        {% if result.artist %}
-            <p class="text-muted">{{ result.artist }}</p>
-        {% endif %}
-        <small>Source: {{ result.source }}</small>
+    <div class="card-header d-flex justify-content-between align-items-start">
+        <div>
+            <h3>{{ result.title }}</h3>
+            {% if result.artist %}
+                <p class="text-muted">{{ result.artist }}</p>
+            {% endif %}
+            <small>Source: {{ result.source }}</small>
+        </div>
+        <div>
+            <button class="btn btn-sm btn-outline-warning favorite-btn" 
+                    data-type="lyrics" 
+                    data-item-id="{{ result.query }}" 
+                    data-title="{{ result.title }} - {{ result.artist }}"
+                    style="{% if result.is_favorite %}display: none;{% endif %}">
+                ☆ Add to Favorites
+            </button>
+            <button class="btn btn-sm btn-warning favorite-btn-remove" 
+                    data-type="lyrics" 
+                    data-item-id="{{ result.query }}"
+                    style="{% if not result.is_favorite %}display: none;{% endif %}">
+                ★ Remove from Favorites
+            </button>
+        </div>
     </div>
     <div class="card-body">
         <pre id="lyrics-text">{{ result.lyrics }}</pre>
