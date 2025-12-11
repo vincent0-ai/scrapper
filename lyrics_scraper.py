@@ -49,30 +49,7 @@ def search_song(query):
     return None
 
 def search_site(query, site_name, site_config):
-    site_type = site_config.get("type", "scrape")
-    if site_type == "api":
-        return _search_api(query, site_config)
-    else:
-        return _search_scrape(query, site_config)
-
-def _search_api(query, site_config):
-    try:
-        search_url = site_config["search_url"].format(query=quote(query))
-        r = requests.get(search_url, timeout=20)
-        r.raise_for_status()
-        data = r.json()
-        if data and data.get("lyrics"):
-            lyrics_data = {
-                "title": data.get("title", query),
-                "artist": data.get("artist", "Unknown"),
-                "lyrics": data["lyrics"],
-                "source": "simpmusic API"
-            }
-            db_manager.save_lyrics(query, lyrics_data) # Save to DB
-            return lyrics_data
-    except requests.exceptions.RequestException:
-        return None
-    return None
+    return _search_scrape(query, site_config)
 
 def _search_scrape(query, site_config):
     search_url = site_config["search_url"].format(query=quote(query))
@@ -131,7 +108,7 @@ def search_simpmusic_only(query, search_type="song"):
 
     try:
         # Using requests params to handle encoding and query construction
-        r = requests.get(url, params=params, timeout=20)
+        r = requests.get(url, params=params, timeout=45)
         r.raise_for_status()
         data = r.json()
         
@@ -150,4 +127,6 @@ def search_simpmusic_only(query, search_type="song"):
 
         return {"error": "No lyrics found via SimpMusic API."}
     except requests.exceptions.RequestException as e:
+        if isinstance(e, requests.exceptions.HTTPError) and e.response is not None and e.response.status_code == 429:
+            return {"error": "SimpMusic API Rate Limit Exceeded. Please try again later."}
         return {"error": f"SimpMusic API Error: {str(e)}"}
