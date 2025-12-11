@@ -1,11 +1,450 @@
+/* Base Styles */
+* {
+    box-sizing: border-box;
+}
+
 body {
     background-color: #f8f9fa;
+    font-size: 16px;
 }
 
 .card {
     margin-bottom: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.card-header {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    border-bottom: 1px solid #e0e0e0;
+    padding: 1rem;
+}
+
+.card-header h4 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
 }
 
 pre {
     white-space: pre-wrap;
+    word-wrap: break-word;
+    border-radius: 4px;
+    background: #f5f5f5;
+    padding: 15px;
+}
+
+/* Sidebar Styles */
+.sidebar-content {
+    position: sticky;
+    top: 20px;
+}
+
+.sidebar-content h5 {
+    font-weight: 600;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+}
+
+.list-group-item {
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.list-group-item:hover {
+    background-color: #f0f0f0;
+    transform: translateX(2px);
+}
+
+.list-group-item-action {
+    padding: 0.5rem 0.75rem;
+}
+
+/* Form Improvements */
+.input-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.input-group .form-control,
+.input-group .form-select {
+    flex: 1;
+    min-width: 150px;
+}
+
+.input-group .btn {
+    white-space: nowrap;
+    font-weight: 500;
+}
+
+.form-control,
+.form-select {
+    border-radius: 4px;
+    border: 1px solid #ced4da;
+    padding: 0.5rem 0.75rem;
+    font-size: 1rem;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Button Improvements */
+.btn {
+    border-radius: 4px;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    transition: all 0.3s ease;
+    font-size: 0.95rem;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Modal Improvements */
+.modal-content {
+    border-radius: 8px;
+}
+
+.modal-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-bottom: none;
+    border-radius: 8px 8px 0 0;
+}
+
+.modal-header .btn-close {
+    filter: brightness(0) invert(1);
+}
+
+.modal-body {
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+/* Responsive Typography */
+h1 {
+    font-size: clamp(1.5rem, 5vw, 2.5rem);
+}
+
+h3, h4 {
+    font-size: clamp(1.1rem, 4vw, 1.5rem);
+}
+
+h5, h6 {
+    font-size: clamp(1rem, 3vw, 1.25rem);
+}
+
+/* Spinner Animation */
+.spinner-border {
+    width: 3rem;
+    height: 3rem;
+}
+
+/* Alert Styles */
+.alert {
+    border-radius: 6px;
+    border: none;
+    padding: 1rem;
+    font-size: 1rem;
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+/* Navbar Improvements */
+.navbar {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-brand {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.nav-link {
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.nav-link:hover {
+    color: #ffc107 !important;
+}
+
+/* Tablet Styles (768px and up) */
+@media (max-width: 991px) {
+    .sidebar-content {
+        position: static;
+        margin-bottom: 2rem;
+    }
+
+    .card-header {
+        padding: 0.75rem;
+    }
+
+    .card-header h4 {
+        font-size: 1.1rem;
+    }
+
+    .input-group {
+        flex-direction: column;
+    }
+
+    .input-group .btn {
+        width: 100%;
+    }
+
+    .list-group-item {
+        font-size: 0.9rem;
+    }
+}
+
+/* Mobile Styles (576px and down) */
+@media (max-width: 575px) {
+    body {
+        font-size: 14px;
+    }
+
+    h1 {
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    h4 {
+        font-size: 1.1rem;
+    }
+
+    .container-fluid {
+        padding: 0;
+    }
+
+    .col-md-2,
+    .col-md-10 {
+        max-width: 100%;
+        flex: 0 0 100%;
+        padding: 0;
+    }
+
+    /* Sidebar becomes top collapsible section on mobile */
+    .col-md-2 {
+        border-right: none;
+        border-bottom: 1px solid #ddd;
+        min-height: auto;
+        padding: 1rem;
+    }
+
+    .col-md-10 {
+        margin-top: 0 !important;
+        padding: 1rem;
+    }
+
+    .sidebar-content {
+        padding: 0;
+    }
+
+    .sidebar-content h5 {
+        font-size: 1rem;
+    }
+
+    .card {
+        margin-bottom: 1rem;
+    }
+
+    .card-header {
+        padding: 0.75rem;
+    }
+
+    .card-header h4 {
+        font-size: 1rem;
+    }
+
+    .card-body {
+        padding: 0.75rem;
+    }
+
+    .card-footer {
+        padding: 0.75rem;
+    }
+
+    /* Stack form inputs vertically */
+    .input-group {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .input-group .form-control,
+    .input-group .form-select,
+    .input-group .btn {
+        width: 100%;
+        min-width: unset;
+    }
+
+    /* Make buttons full width on mobile */
+    .btn {
+        width: 100%;
+        min-height: 44px;
+        font-size: 1rem;
+    }
+
+    #copy-lyrics-btn,
+    .copy-medium-btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+
+    .card-footer {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .card-footer form {
+        width: 100%;
+    }
+
+    .card-footer button[type="submit"] {
+        width: 100%;
+    }
+
+    /* List group improvements for mobile */
+    .list-group-item {
+        padding: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .list-group-item small {
+        display: block;
+        margin-top: 0.25rem;
+    }
+
+    /* Modal improvements for mobile */
+    .modal-dialog {
+        margin: 1rem;
+    }
+
+    .modal-body {
+        max-height: 70vh;
+        padding: 1rem;
+    }
+
+    /* Remove horizontal padding on container for full width */
+    [class*="col-"] {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+
+    /* Make forms more touch-friendly */
+    .form-control,
+    .form-select {
+        padding: 0.75rem;
+        font-size: 16px;
+    }
+
+    /* Responsive typography for mobile */
+    .text-muted {
+        font-size: 0.85rem;
+    }
+
+    pre {
+        font-size: 0.85rem;
+        padding: 10px;
+    }
+
+    /* Favorite button improvements */
+    .favorite-btn,
+    .favorite-btn-remove {
+        width: auto;
+    }
+
+    .d-flex.gap-2 {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .d-flex.gap-2 button,
+    .d-flex.gap-2 form button {
+        flex: 1;
+        min-width: 100px;
+    }
+}
+
+/* Very small devices (< 400px) */
+@media (max-width: 399px) {
+    h1 {
+        font-size: 1.25rem;
+    }
+
+    h4 {
+        font-size: 0.95rem;
+    }
+
+    .btn {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.9rem;
+        min-height: 40px;
+    }
+
+    .card-header {
+        padding: 0.5rem;
+    }
+
+    .card-body,
+    .card-footer {
+        padding: 0.5rem;
+    }
+
+    .col-md-2,
+    .col-md-10 {
+        padding: 0;
+    }
+
+    [class*="col-"] {
+        padding: 0;
+    }
+
+    .mt-4 {
+        margin-top: 1rem !important;
+    }
+
+    .mb-3 {
+        margin-bottom: 0.75rem !important;
+    }
+
+    .mb-4 {
+        margin-bottom: 1rem !important;
+    }
 }

@@ -3,78 +3,80 @@
 {% block title %}Web Scraper{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <h1 class="mb-4 text-center">Web Scraper</h1>
+<div class="container-lg">
+    <h1 class="mb-4 text-center">🔍 Web Scraper</h1>
 
-    <div class="row">
+    <div class="row g-3">
         <!-- Lyrics Scraper Card -->
-        <div class="col-md-6">
-            <div class="card mb-4">
+        <div class="col-12 col-lg-6">
+            <div class="card h-100">
                 <div class="card-header">
-                    <h4>Lyrics Scraper</h4>
+                    <h4>🎵 Lyrics Scraper</h4>
                 </div>
-                <div class="card-body">
-                    <form id="lyrics-form">
-                        <div class="input-group mb-3">
-                            <input type="text" name="query" class="form-control" placeholder="Enter song title or artist" required>
-                            <button class="btn btn-primary" type="submit">Search Lyrics</button>
+                <div class="card-body d-flex flex-column">
+                    <form id="lyrics-form" class="w-100">
+                        <div class="mb-2">
+                            <input type="text" name="query" class="form-control" placeholder="Song title or artist" required>
                         </div>
+                        <button class="btn btn-primary w-100" type="submit">Search Lyrics</button>
                     </form>
                 </div>
             </div>
         </div>
 
         <!-- Medium Scraper Card -->
-        <div class="col-md-6">
-            <div class="card mb-4">
+        <div class="col-12 col-lg-6">
+            <div class="card h-100">
                 <div class="card-header">
-                    <h4>Medium Article Scraper</h4>
+                    <h4>📰 Medium Article</h4>
                 </div>
-                <div class="card-body">
-                    <form id="medium-form">
-                        <div class="input-group mb-3">
-                            <input type="url" name="url" class="form-control" placeholder="Enter Medium.com article URL" required>
-                            <button class="btn btn-primary" type="submit">Scrape Article</button>
+                <div class="card-body d-flex flex-column">
+                    <form id="medium-form" class="w-100">
+                        <div class="mb-2">
+                            <input type="url" name="url" class="form-control" placeholder="Medium.com article URL" required>
                         </div>
+                        <button class="btn btn-primary w-100" type="submit">Scrape Article</button>
                     </form>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row">
+    <div class="row g-3 mt-1">
         <!-- SimpMusic API Card -->
-        <div class="col-md-6">
-            <div class="card mb-4">
+        <div class="col-12 col-lg-6">
+            <div class="card h-100">
                 <div class="card-header">
-                    <h4>SimpMusic API</h4>
+                    <h4>🎶 SimpMusic API</h4>
                 </div>
-                <div class="card-body">
-                    <form id="simpmusic-form">
-                        <div class="input-group mb-3">
-                            <select class="form-select" name="type" style="max-width: 120px;">
+                <div class="card-body d-flex flex-column">
+                    <form id="simpmusic-form" class="w-100">
+                        <div class="mb-2">
+                            <select class="form-select" name="type">
                                 <option value="general">General</option>
                                 <option value="song" selected>Song</option>
                                 <option value="artist">Artist</option>
                                 <option value="album">Album</option>
                             </select>
-                            <input type="text" name="query" class="form-control" placeholder="Enter artist, song, etc." required>
-                            <button class="btn btn-success" type="submit">Search Music</button>
                         </div>
+                        <div class="mb-2">
+                            <input type="text" name="query" class="form-control" placeholder="Artist, song, album..." required>
+                        </div>
+                        <button class="btn btn-success w-100" type="submit">Search Music</button>
                     </form>
                 </div>
             </div>
         </div>
 
         <!-- Proxy Scraper Card -->
-        <div class="col-md-6">
-            <div class="card mb-4">
+        <div class="col-12 col-lg-6">
+            <div class="card h-100">
                 <div class="card-header">
-                    <h4>Proxy Scraper</h4>
+                    <h4>🔗 Proxy Scraper</h4>
                 </div>
-                <div class="card-body">
-                    <form id="proxy-form">
-                        <button class="btn btn-info" type="submit">Update Proxies</button>
+                <div class="card-body d-flex flex-column justify-content-center">
+                    <form id="proxy-form" class="w-100">
+                        <button class="btn btn-info w-100" type="submit">Update Proxies</button>
                     </form>
                 </div>
             </div>

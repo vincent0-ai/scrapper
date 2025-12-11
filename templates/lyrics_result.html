@@ -4,40 +4,44 @@
 
 {% block content %}
 <div class="card">
-    <div class="card-header d-flex justify-content-between align-items-start">
-        <div>
-            <h3>{{ result.title }}</h3>
-            {% if result.artist %}
-                <p class="text-muted">{{ result.artist }}</p>
-            {% endif %}
-            <small>Source: {{ result.source }}</small>
-        </div>
-        <div>
-            <button class="btn btn-sm btn-outline-warning favorite-btn" 
-                    data-type="lyrics" 
-                    data-item-id="{{ result.query }}" 
-                    data-title="{{ result.title }} - {{ result.artist }}"
-                    style="{% if result.is_favorite %}display: none;{% endif %}">
-                ☆ Add to Favorites
-            </button>
-            <button class="btn btn-sm btn-warning favorite-btn-remove" 
-                    data-type="lyrics" 
-                    data-item-id="{{ result.query }}"
-                    style="{% if not result.is_favorite %}display: none;{% endif %}">
-                ★ Remove from Favorites
-            </button>
+    <div class="card-header">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-2">
+            <div class="flex-grow-1">
+                <h3 class="mb-2">{{ result.title }}</h3>
+                {% if result.artist %}
+                    <p class="text-muted mb-1">🎤 {{ result.artist }}</p>
+                {% endif %}
+                <small>📌 Source: {{ result.source }}</small>
+            </div>
+            <div class="d-flex gap-2 flex-wrap justify-content-end">
+                <button class="btn btn-sm btn-outline-warning favorite-btn" 
+                        data-type="lyrics" 
+                        data-item-id="{{ result.query }}" 
+                        data-title="{{ result.title }} - {{ result.artist }}"
+                        style="{% if result.is_favorite %}display: none;{% endif %}">
+                    ☆ Favorite
+                </button>
+                <button class="btn btn-sm btn-warning favorite-btn-remove" 
+                        data-type="lyrics" 
+                        data-item-id="{{ result.query }}"
+                        style="{% if not result.is_favorite %}display: none;{% endif %}">
+                    ★ Favorited
+                </button>
+            </div>
         </div>
     </div>
     <div class="card-body">
         <pre id="lyrics-text">{{ result.lyrics }}</pre>
     </div>
     <div class="card-footer">
-        <button id="copy-lyrics-btn" class="btn btn-info">Copy Lyrics</button>
-        <form action="/download_lyrics" method="post" style="display: inline;">
-            <input type="hidden" name="title" value="{{ result.title }}">
-            <input type="hidden" name="lyrics" value="{{ result.lyrics }}">
-            <button type="submit" class="btn btn-success">Download .txt</button>
-        </form>
+        <div class="d-grid gap-2 d-sm-flex flex-wrap">
+            <button id="copy-lyrics-btn" class="btn btn-info flex-sm-grow-1">📋 Copy Lyrics</button>
+            <form action="/download_lyrics" method="post" class="flex-sm-grow-1">
+                <input type="hidden" name="title" value="{{ result.title }}">
+                <input type="hidden" name="lyrics" value="{{ result.lyrics }}">
+                <button type="submit" class="btn btn-success w-100">⬇️ Download</button>
+            </form>
+        </div>
     </div>
 </div>
 {% endblock %}
