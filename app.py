@@ -4,7 +4,13 @@ import os
 import redis
 from rq import Queue
 from db import db_manager # Assuming db_manager is correctly implemented and handles data storage/retrieval
-from worker import scrape_lyrics, scrape_medium as worker_scrape_medium, update_proxies as worker_update_proxies, search_simpmusic as worker_search_simpmusic
+from worker import (
+    scrape_lyrics,
+    scrape_medium as worker_scrape_medium,
+    scrape_freedium as worker_scrape_freedium,
+    update_proxies as worker_update_proxies,
+    search_simpmusic as worker_search_simpmusic,
+)
 
 app = Flask(__name__)
 
@@ -74,6 +80,27 @@ def scrape_medium():
 
     # If not in DB, start a background job
     job = q.enqueue(worker_scrape_medium, url, job_timeout=3600, meta={'template_name': 'medium_result.html'})
+    return jsonify({"status": "PENDING", "task_id": job.get_id()})
+
+
+@app.route('/scrape_freedium', methods=['POST'])
+def scrape_freedium():
+    url = request.form.get('url')
+    if not url:
+        return jsonify({"error": "Freedium URL is required."}), 400
+
+    # Add to search history
+    db_manager.add_to_search_history('freedium', url)
+
+    # Try to get from DB first
+    cached_result = db_manager.get_article(url)
+    if cached_result:
+        cached_result.pop('_id', None)
+        cached_result['is_favorite'] = db_manager.is_favorite(url)
+        return jsonify({"status": "SUCCESS", "result": render_template('freedium_result.html', article=cached_result)})
+
+    # If not in DB, start a background job
+    job = q.enqueue(worker_scrape_freedium, url, job_timeout=3600, meta={'template_name': 'freedium_result.html'})
     return jsonify({"status": "PENDING", "task_id": job.get_id()})
 
 @app.route('/update_proxies', methods=['POST'])

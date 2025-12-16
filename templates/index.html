@@ -44,6 +44,23 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Freedium Scraper Card -->
+        <div class="col-12 col-lg-6 mt-2">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h4>📰 Freedium Article</h4>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <form id="freedium-form" class="w-100">
+                        <div class="mb-2">
+                            <input type="url" name="url" class="form-control" placeholder="Freedium article URL" required>
+                        </div>
+                        <button class="btn btn-primary w-100" type="submit">Scrape Freedium</button>
+                    </form>
+                </div>
+            </div>
+        </div>
             </div>
 
             <div class="row g-3 mt-1">
@@ -103,6 +120,7 @@
 <script>
     const lyricsForm = document.getElementById('lyrics-form');
     const mediumForm = document.getElementById('medium-form');
+    const freediumForm = document.getElementById('freedium-form');
     const proxyForm = document.getElementById('proxy-form');
     const simpmusicForm = document.getElementById('simpmusic-form');
     const resultsArea = document.getElementById('results-area');
@@ -127,6 +145,14 @@
         const formData = new FormData(this);
         handleFormSubmit('/scrape_medium', formData);
     });
+
+    if (freediumForm) {
+        freediumForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            handleFormSubmit('/scrape_freedium', formData);
+        });
+    }
 
     proxyForm.addEventListener('submit', function(e) {
         e.preventDefault();

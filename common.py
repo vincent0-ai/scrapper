@@ -4,8 +4,12 @@ import requests
 import hashlib
 import json
 import time  # Keep time for file cache
-from dotenv import load_dotenv
-load_dotenv()
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except Exception:
+    # python-dotenv is optional; if not installed, rely on environment variables
+    pass
 
 
 FLARE = os.environ.get("FLARE_URL") # FlareSolverr URL

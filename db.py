@@ -1,5 +1,14 @@
 import os
-from pymongo import MongoClient
+try:
+    from pymongo import MongoClient
+except Exception:
+    MongoClient = None
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except Exception:
+    # If python-dotenv isn't installed, rely on environment variables already set
+    pass
 from datetime import datetime, timedelta
 
 # Environment variables for MongoDB connection
@@ -20,6 +29,14 @@ class MongoDBManager:
         return cls._instance
 
     def _connect(self):
+        # If pymongo is not installed, avoid attempting a DB connection
+        if MongoClient is None:
+            print("pymongo not installed — using no-op in-memory DB manager")
+            self.client = None
+            self.db = None
+            self._store = {"articles": {}, "lyrics": {}}
+            return
+
         try:
             self.client = MongoClient(MONGO_URL)
             self.db = self.client[DB_NAME]
@@ -52,19 +69,25 @@ class MongoDBManager:
             print("MongoDB TTL indexes created/updated.")
 
     def get_lyrics(self, query):
-        if self.db is None: return None
+        if getattr(self, "db", None) is None:
+            return getattr(self, "_store", {}).get("lyrics", {}).get(query)
         return self.db.lyrics.find_one({"query": query})
 
     def save_lyrics(self, query, lyrics_data):
-        if self.db is None: return
+        if getattr(self, "db", None) is None:
+            self._store.setdefault("lyrics", {})[query] = {**lyrics_data, "query": query}
+            return
         self.db.lyrics.update_one({"query": query}, {"$set": {**lyrics_data, "query": query, "timestamp": datetime.now()}}, upsert=True)
 
     def get_article(self, url):
-        if self.db is None: return None
+        if getattr(self, "db", None) is None:
+            return getattr(self, "_store", {}).get("articles", {}).get(url)
         return self.db.articles.find_one({"url": url})
 
     def save_article(self, url, article_data):
-        if self.db is None: return
+        if getattr(self, "db", None) is None:
+            self._store.setdefault("articles", {})[url] = {**article_data, "url": url}
+            return
         self.db.articles.update_one({"url": url}, {"$set": {**article_data, "url": url, "timestamp": datetime.now()}}, upsert=True)
 
     def add_to_search_history(self, search_type, query, metadata=None):
