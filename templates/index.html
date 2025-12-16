@@ -4,9 +4,13 @@
 
 {% block content %}
 <div class="container-lg">
-    <h1 class="mb-4 text-center">🔍 Web Scraper</h1>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 
-    <div class="row g-3">
+    <div class="row">
+        <div class="col-12 col-lg-8 main-col">
+            <h1 class="mb-4 text-center">🔍 Web Scraper</h1>
+
+            <div class="row g-3">
         <!-- Lyrics Scraper Card -->
         <div class="col-12 col-lg-6">
             <div class="card h-100">
@@ -40,9 +44,9 @@
                 </div>
             </div>
         </div>
-    </div>
+            </div>
 
-    <div class="row g-3 mt-1">
+            <div class="row g-3 mt-1">
         <!-- SimpMusic API Card -->
         <div class="col-12 col-lg-6">
             <div class="card h-100">
@@ -81,12 +85,42 @@
                 </div>
             </div>
         </div>
+            </div>
+
+            <!-- Results Area -->
+            <div id="results-area" class="mt-4">
+                <!-- JS will inject loading messages and results here -->
+            </div>
+        </div>
+
+        <!-- Sidebar / History -->
+        <aside class="col-12 col-lg-4 sidebar-col">
+            <div id="history-panel" class="history-panel">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <strong>History</strong>
+                    <small class="text-muted">Recent results</small>
+                </div>
+                <div id="history-content">
+                    <!-- History entries will be moved here to avoid duplication on mobile -->
+                </div>
+            </div>
+        </aside>
     </div>
 
-    <!-- Results Area -->
-    <div id="results-area" class="mt-4">
-        <!-- JS will inject loading messages and results here -->
+    <!-- Mobile history toggle -->
+    <button id="history-toggle" class="history-toggle-mobile d-lg-none" aria-label="Show history">History</button>
+
+    <!-- Mobile history overlay -->
+    <div id="mobile-history" class="mobile-history-overlay">
+        <div class="panel">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <strong>History</strong>
+                <button id="mobile-history-close" class="btn btn-sm btn-light">Close</button>
+            </div>
+            <div id="mobile-history-content"></div>
+        </div>
     </div>
+
 </div>
 
 <script>
@@ -95,6 +129,11 @@
     const proxyForm = document.getElementById('proxy-form');
     const simpmusicForm = document.getElementById('simpmusic-form');
     const resultsArea = document.getElementById('results-area');
+    const historyContent = document.getElementById('history-content');
+    const mobileHistory = document.getElementById('mobile-history');
+    const mobileHistoryContent = document.getElementById('mobile-history-content');
+    const historyToggle = document.getElementById('history-toggle');
+    const mobileHistoryClose = document.getElementById('mobile-history-close');
 
     lyricsForm.addEventListener('submit', function(e) {
         e.preventDefault();
@@ -144,6 +183,7 @@
             if (data.status === 'SUCCESS') {
                 // Result was in cache, display it immediately
                 resultsArea.innerHTML = data.result;
+                dedupeResultsHistory();
             } else if (data.status === 'PENDING') {
                 // Job started, begin polling
                 pollJobStatus(data.task_id);
@@ -166,6 +206,7 @@
                     if (data.state === 'SUCCESS') {
                         clearInterval(interval);
                         resultsArea.innerHTML = data.result;
+                        dedupeResultsHistory();
                     } else if (data.state === 'FAILED') {
                         clearInterval(interval);
                         resultsArea.innerHTML = `<div class="alert alert-danger">${data.status || 'The job failed.'}</div>`;
@@ -179,6 +220,32 @@
                 });
         }, 3000); // Poll every 3 seconds
     }
+
+    // Move any `.history` blocks from results into the dedicated history panel
+    function dedupeResultsHistory(){
+        if (!resultsArea) return;
+        const histEls = resultsArea.querySelectorAll('.history');
+        histEls.forEach(el => {
+            // create a history item wrapper
+            const item = document.createElement('div');
+            item.className = 'history-item';
+            item.innerHTML = el.innerHTML;
+            historyContent.prepend(item);
+            // remove original to avoid duplicate content on mobile
+            el.remove();
+        });
+        // keep mobile copy in sync
+        mobileHistoryContent.innerHTML = historyContent.innerHTML;
+    }
+
+    // History toggle for mobile
+    historyToggle && historyToggle.addEventListener('click', () => {
+        mobileHistoryContent.innerHTML = historyContent.innerHTML;
+        mobileHistory.classList.add('open');
+    });
+    mobileHistoryClose && mobileHistoryClose.addEventListener('click', () => {
+        mobileHistory.classList.remove('open');
+    });
 
     // This makes the dynamically added "Copy" and "Download" buttons work
     document.addEventListener('click', function(e) {

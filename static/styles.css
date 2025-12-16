@@ -1,0 +1,110 @@
+:root{
+    --bg:#0f1724;
+    --card:#0b1220;
+    --muted:#9aa4b2;
+    --accent:#4f46e5;
+    --success:#10b981;
+    --glass: rgba(255,255,255,0.04);
+}
+
+/* Reset small bits */
+body{
+    background: linear-gradient(180deg, #071025 0%, #0b1220 100%);
+    color: #e6eef8;
+    font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+}
+
+.container-lg{
+    padding-top: 28px;
+    padding-bottom: 48px;
+}
+
+.card{
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border: 1px solid rgba(255,255,255,0.04);
+    border-radius: 12px;
+    box-shadow: 0 6px 18px rgba(2,6,23,0.6);
+}
+
+.card-header h4{ margin:0; font-weight:600; }
+
+h1{
+    font-size: 1.6rem;
+    letter-spacing: -0.4px;
+}
+
+input.form-control, select.form-select{
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.05);
+    color: #e6eef8;
+}
+
+.btn-primary{ background: var(--accent); border: none; }
+.btn-success{ background: var(--success); border: none; }
+.btn-info{ background: #06b6d4; border: none; }
+
+.btn{ border-radius: 10px; padding: 10px 14px; }
+
+.mt-4{ margin-top: 1.25rem!important; }
+
+/* Results styling */
+#results-area .card{ padding: 12px; }
+
+/* History panel styles */
+.history-panel{
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border-left: 1px solid rgba(255,255,255,0.03);
+    padding: 12px;
+    border-radius: 12px;
+    height: auto;
+    max-height: 72vh;
+    overflow:auto;
+}
+
+.history-item{ background: var(--glass); padding:10px; margin-bottom:8px; border-radius:8px; font-size:0.95rem; color:var(--muted); }
+
+/* Floating history button for mobile */
+.history-toggle-mobile{
+    position: fixed;
+    right: 18px;
+    bottom: 18px;
+    z-index: 1200;
+    border-radius: 14px;
+    padding: 10px 14px;
+    background: linear-gradient(90deg,var(--accent), #06b6d4);
+    color: white;
+    box-shadow: 0 8px 24px rgba(15,23,42,0.6);
+    border: none;
+}
+
+/* Hide redundant history (if duplicates appear) on small screens */
+@media (max-width: 991px){
+    .history-panel{ display:none !important; }
+}
+
+/* Layout tweaks */
+@media (min-width: 992px){
+    .main-col{ padding-right: 20px; }
+    .sidebar-col{ padding-left: 20px; }
+}
+
+/* Subtle responsive text sizes */
+@media (max-width: 576px){
+    h1{ font-size: 1.25rem; }
+    .card{ border-radius:10px; }
+}
+
+/* Mobile history overlay */
+.mobile-history-overlay{
+    position: fixed;
+    inset: 0;
+    background: rgba(2,6,23,0.8);
+    z-index: 1400;
+    display: none;
+    padding: 18px;
+}
+.mobile-history-overlay.open{ display:block; }
+.mobile-history-overlay .panel{ background: rgba(10,16,26,0.96); border-radius:10px; padding:12px; max-height: 92vh; overflow:auto; }
+
