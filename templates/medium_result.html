@@ -7,9 +7,9 @@
     <div class="card-header">
         <div class="d-flex flex-column gap-2">
             <div>
-                <h3 class="mb-2">{{ article.title }}</h3>
+                <h3 class="mb-2 text-break">{{ article.title }}</h3>
                 <p class="text-muted mb-1">✍️ By: {{ article.author }} | 📅 {{ article.published }}</p>
-                <p class="mb-2">🔗 <a href="{{ article.url }}" target="_blank" rel="noopener noreferrer" class="text-truncate">{{ article.url }}</a></p>
+                <p class="mb-2 text-break">🔗 <a href="{{ article.url }}" target="_blank" rel="noopener noreferrer" class="text-break d-inline-block" style="max-width:100%; word-break:break-word; overflow-wrap:break-word;">{{ article.url }}</a></p>
                 {% if article.tags %}
                     <p class="mb-0">
                     {% for tag in article.tags %}
