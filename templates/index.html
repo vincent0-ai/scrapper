@@ -158,6 +158,8 @@
             if (data.status === 'SUCCESS') {
                 // Result was in cache, display it immediately
                 resultsArea.innerHTML = extractRelevantHtml(data.result);
+                // remove any duplicated sidebar/history that may have come with injected HTML
+                if (typeof sanitizeInjectedResults === 'function') sanitizeInjectedResults();
                 dedupeResultsHistory();
             } else if (data.status === 'PENDING') {
                 // Job started, begin polling
@@ -181,6 +183,7 @@
                     if (data.state === 'SUCCESS') {
                         clearInterval(interval);
                         resultsArea.innerHTML = extractRelevantHtml(data.result);
+                        if (typeof sanitizeInjectedResults === 'function') sanitizeInjectedResults();
                         dedupeResultsHistory();
                     } else if (data.state === 'FAILED') {
                         clearInterval(interval);
@@ -267,6 +270,19 @@
             el.remove();
         });
         // done
+    }
+
+    // Remove any nested sidebar or search-history that came embedded in server-rendered HTML
+    function sanitizeInjectedResults(){
+        if (!resultsArea) return;
+        // Remove any nested search history containers inside results area
+        const nestedIds = ['search-history'];
+        nestedIds.forEach(id => {
+            const el = resultsArea.querySelector(`#${id}`);
+            if (el) el.remove();
+        });
+        // Remove any sidebar panels accidentally injected
+        resultsArea.querySelectorAll('.sidebar-fixed, .history-panel, .offcanvas, #favoritesModal').forEach(n => n.remove());
     }
 
     // Click handler: when a history item (or its title) is clicked, attempt to load the saved result

@@ -213,6 +213,8 @@
               } else {
                 resultsArea.innerHTML = data.result;
               }
+              // remove any duplicated sidebar injected with the content
+              try{ if (typeof sanitizeInjectedResults === 'function') sanitizeInjectedResults(); }catch(e){}
               // call dedupe if available
               if (typeof dedupeResultsHistory === 'function') dedupeResultsHistory();
             } else if (data.status === 'PENDING'){
