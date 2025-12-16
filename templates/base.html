@@ -40,7 +40,8 @@
     <div class="container-fluid">
       <div class="row">
         <!-- Sidebar with Search History (fixed width) -->
-        <div class="sidebar-fixed bg-light p-3" style="min-height: 100vh; border-right: 1px solid #ddd;">
+        <!-- Hidden on small screens; mobile uses the offcanvas button instead -->
+        <div class="sidebar-fixed bg-light p-3 d-none d-lg-block" style="min-height: 100vh; border-right: 1px solid #ddd;">
           <div class="sidebar-content">
             <h5 class="mb-2">📋 Search History</h5>
             <div id="search-history" class="mt-2">
