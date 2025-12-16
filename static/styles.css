@@ -185,12 +185,27 @@ input.form-control, select.form-select{
 }
 
 /* Ensure the row uses flex and doesn't wrap sidebar unexpectedly */
-.container-fluid > .row{ display:flex; }
+.container-fluid > .row{ display:flex; flex-wrap: nowrap; align-items: flex-start; }
+
+/* On wider screens ensure main area shrinks instead of wrapping */
+@media (min-width: 1100px){
+    .main-fluid{ width: calc(100% - 260px); }
+}
 
 /* Responsive: stack sidebar above main on small screens */
 @media (max-width: 767px){
     .sidebar-fixed{ flex: 0 0 100%; max-width: 100%; border-right: none; border-bottom: 1px solid rgba(0,0,0,0.06); }
     .main-fluid{ flex: 0 0 100%; max-width: 100%; }
+}
+
+/* Ensure card headers wrap their children nicely (fix Medium header overlap) */
+.card-header .d-flex{ flex-wrap: wrap; gap: 10px; align-items: flex-start; }
+.card-header .d-flex > div{ min-width: 0; }
+
+/* Make sure the right-side action buttons don't push the title off on medium screens */
+@media (min-width: 768px){
+    .card-header .d-flex.flex-md-row{ flex-direction: row; }
+    .card-header .d-flex .flex-grow-1{ min-width: 0; }
 }
 
 
