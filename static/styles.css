@@ -184,19 +184,22 @@ input.form-control, select.form-select{
     min-width: 0; /* allow children to shrink properly */
 }
 
-/* Ensure the row uses flex and doesn't wrap sidebar unexpectedly */
-.container-fluid > .row{ display:flex; flex-wrap: nowrap; align-items: flex-start; }
+/* Ensure the row uses flex; allow wrapping by default for small screens */
+.container-fluid > .row{ display:flex; flex-wrap: wrap; align-items: flex-start; }
 
-/* On wider screens increase sidebar width and ensure main area uses remaining space */
+/* On wider screens prevent wrapping so sidebar + main sit side-by-side */
 @media (min-width: 1100px){
+    .container-fluid > .row{ flex-wrap: nowrap; }
     .sidebar-fixed{ flex: 0 0 340px; max-width: 340px; }
     .main-fluid{ width: calc(100% - 340px); }
 }
 
 /* Responsive: stack sidebar above main on small screens */
 @media (max-width: 767px){
-    .sidebar-fixed{ flex: 0 0 100%; max-width: 100%; border-right: none; border-bottom: 1px solid rgba(0,0,0,0.06); }
-    .main-fluid{ flex: 0 0 100%; max-width: 100%; }
+    .sidebar-fixed{ flex: 0 0 100%; max-width: 100%; border-right: none; border-bottom: 1px solid rgba(0,0,0,0.06); order: 0; }
+    .main-fluid{ flex: 0 0 100%; max-width: 100%; order: 1; }
+    /* prevent horizontal scrolling on mobile */
+    body, html{ overflow-x: hidden; }
 }
 
 /* Large-screen: give search-history more breathing room and spacing */
