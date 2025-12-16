@@ -108,3 +108,31 @@ input.form-control, select.form-select{
 .mobile-history-overlay.open{ display:block; }
 .mobile-history-overlay .panel{ background: rgba(10,16,26,0.96); border-radius:10px; padding:12px; max-height: 92vh; overflow:auto; }
 
+/* Search history / sidebar tweaks to avoid overlap and improve wrapping */
+#search-history{
+    max-height: 86vh;
+    overflow:auto;
+}
+
+#search-history .list-group-item,
+#search-history .history-item{
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    display: block;
+}
+
+#search-history .list-group-item small{
+    display:block;
+    color: var(--muted);
+}
+
+.sidebar-content{ padding-right: 8px; }
+
+/* Ensure sidebar doesn't overlap main content on medium screens */
+@media (min-width: 768px) and (max-width: 1100px){
+    .col-md-2{ flex: 0 0 220px; max-width: 220px; }
+    .col-md-10{ margin-left: 8px; }
+}
+
+

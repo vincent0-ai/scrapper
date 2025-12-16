@@ -157,7 +157,7 @@
             // 3. Handle the initial response
             if (data.status === 'SUCCESS') {
                 // Result was in cache, display it immediately
-                resultsArea.innerHTML = data.result;
+                resultsArea.innerHTML = extractRelevantHtml(data.result);
                 dedupeResultsHistory();
             } else if (data.status === 'PENDING') {
                 // Job started, begin polling
@@ -180,7 +180,7 @@
                 .then(data => {
                     if (data.state === 'SUCCESS') {
                         clearInterval(interval);
-                        resultsArea.innerHTML = data.result;
+                        resultsArea.innerHTML = extractRelevantHtml(data.result);
                         dedupeResultsHistory();
                     } else if (data.state === 'FAILED') {
                         clearInterval(interval);
@@ -196,37 +196,77 @@
         }, 3000); // Poll every 3 seconds
     }
 
+    // Extract the meaningful content from server-rendered full-page HTML responses
+    function extractRelevantHtml(html){
+        try{
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            // Prefer the content column used by base.html
+            const contentCol = doc.querySelector('.col-md-10');
+            if (contentCol) return contentCol.innerHTML;
+            // Fallback to the first card or main content
+            const firstCard = doc.querySelector('.card');
+            if (firstCard) return firstCard.outerHTML;
+            return doc.body.innerHTML;
+        }catch(e){
+            return html;
+        }
+    }
+
     // Move any `.history` blocks from results into the dedicated history panel
     function dedupeResultsHistory(){
         if (!resultsArea) return;
         const histEls = resultsArea.querySelectorAll('.history');
         histEls.forEach(el => {
-            // create a history item wrapper
-            const item = document.createElement('div');
-            item.className = 'history-item';
-            item.innerHTML = el.innerHTML;
-            // copy any data- attributes from the original .history element (e.g., data-task-id or data-replay-url)
-            for (let i = 0; i < el.attributes.length; i++){
-                const attr = el.attributes[i];
-                if (attr.name.startsWith('data-')){
-                    item.setAttribute(attr.name, attr.value);
-                }
+            // Determine identifiers to dedupe
+            const taskId = el.getAttribute('data-task-id') || el.dataset.taskId || '';
+            const replayUrl = el.getAttribute('data-replay-url') || el.dataset.replayUrl || '';
+            // Attempt to extract a friendly query/title from the element
+            let queryText = (el.getAttribute('data-history-query') || el.dataset.historyQuery || '').trim();
+            if (!queryText){
+                const titleEl = el.querySelector('.history-title') || el.querySelector('h5') || el.querySelector('strong');
+                queryText = titleEl ? titleEl.innerText.trim() : (el.innerText || '').trim().slice(0,60);
             }
-            // Prefer `#search-history` from base.html if present
+
+            // If an entry with same task-id or same query already exists in the global search history, skip
+            let exists = false;
             if (searchHistoryDiv){
-                // remove placeholder if present
+                if (taskId && searchHistoryDiv.querySelector(`[data-task-id="${taskId}"]`)) exists = true;
+                if (!exists && queryText && searchHistoryDiv.querySelector(`[data-history-query="${CSS.escape(queryText)}"]`)) exists = true;
+            }
+            if (exists) {
+                el.remove();
+                return; // skip duplicates
+            }
+
+            // Create a standardized list-group button so entries match base.html
+            const btn = document.createElement('button');
+            btn.setAttribute('type','button');
+            btn.className = 'list-group-item list-group-item-action text-start py-2';
+            if (taskId) btn.setAttribute('data-task-id', taskId);
+            if (replayUrl) btn.setAttribute('data-replay-url', replayUrl);
+            if (queryText) btn.setAttribute('data-history-query', queryText);
+
+            // build inner structure similar to base.html list-group items
+            const timeSmall = el.querySelector('.history-time') ? el.querySelector('.history-time').innerText : '';
+            const displayText = queryText.length > 45 ? queryText.slice(0,45) + '...' : queryText;
+            btn.innerHTML = `<div class="d-flex justify-content-between align-items-center"><small>${displayText}</small><small class="text-muted">${timeSmall}</small></div>`;
+
+            // Insert into searchHistoryDiv or fallback
+            if (searchHistoryDiv){
                 if (searchHistoryDiv.children.length === 1 && searchHistoryDiv.querySelector('.text-muted')){
                     searchHistoryDiv.innerHTML = '';
                 }
-                searchHistoryDiv.prepend(item);
-            } else if (historyContent) {
-                historyContent.prepend(item);
+                // prepend to show newest first
+                searchHistoryDiv.prepend(btn);
+            } else if (historyContent){
+                historyContent.prepend(btn);
             }
+
             // remove original to avoid duplicate content
             el.remove();
         });
-        // keep base `#search-history` as the single source of truth
-        if (searchHistoryDiv && historyContent) searchHistoryDiv.innerHTML = searchHistoryDiv.innerHTML;
+        // done
     }
 
     // Click handler: when a history item (or its title) is clicked, attempt to load the saved result
