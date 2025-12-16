@@ -126,18 +126,64 @@
       }
 
       function repeatSearch(type, query) {
-        if (type === 'lyrics' || type === 'simpmusic') {
-          // Find and fill the form
-          const form = type === 'lyrics' ? document.getElementById('lyrics-form') : document.getElementById('simpmusic-form');
-          const input = form.querySelector('input[name="query"]');
-          input.value = query;
-          form.submit();
-        } else if (type === 'medium') {
-          const form = document.getElementById('medium-form');
-          const input = form.querySelector('input[name="url"]');
-          input.value = query;
-          form.submit();
+        // Perform the same AJAX submission as index.js so we don't trigger a full page reload.
+        let form, input, url;
+        if (type === 'lyrics'){
+          form = document.getElementById('lyrics-form');
+          input = form.querySelector('input[name="query"]');
+          url = '/search_lyrics';
+        } else if (type === 'simpmusic'){
+          form = document.getElementById('simpmusic-form');
+          input = form.querySelector('input[name="query"]');
+          url = '/search_simpmusic';
+        } else if (type === 'medium'){
+          form = document.getElementById('medium-form');
+          input = form.querySelector('input[name="url"]');
+          url = '/scrape_medium';
         }
+
+        if (!form || !input || !url) return;
+        input.value = query;
+
+        const resultsArea = document.getElementById('results-area') || window.resultsArea;
+        if (resultsArea) {
+          resultsArea.innerHTML = `
+            <div class="card">
+                <div class="card-body text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Retrieving saved result...</p>
+                </div>
+            </div>
+          `;
+        }
+
+        const fd = new FormData(form);
+        fetch(url, { method: 'POST', body: fd })
+          .then(r => r.json())
+          .then(data => {
+            if (!resultsArea) return;
+            if (data.status === 'SUCCESS'){
+              // Use helper from index.js if available to extract relevant HTML
+              if (typeof extractRelevantHtml === 'function'){
+                resultsArea.innerHTML = extractRelevantHtml(data.result);
+              } else {
+                resultsArea.innerHTML = data.result;
+              }
+              // call dedupe if available
+              if (typeof dedupeResultsHistory === 'function') dedupeResultsHistory();
+            } else if (data.status === 'PENDING'){
+              // Start polling using index's pollJobStatus if available
+              if (typeof pollJobStatus === 'function') pollJobStatus(data.task_id);
+              else resultsArea.innerHTML = `<div class="alert alert-info">Job queued. Refresh later to view result.</div>`;
+            } else {
+              resultsArea.innerHTML = `<div class="alert alert-danger">${data.error || 'Not found'}</div>`;
+            }
+          })
+          .catch(() => {
+            if (resultsArea) resultsArea.innerHTML = `<div class="alert alert-danger">Failed to retrieve saved content.</div>`;
+          });
       }
 
       function loadFavorites() {
@@ -157,25 +203,33 @@
               const time = new Date(fav.timestamp);
               const timeStr = time.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' });
               html += `
-                <div class="list-group-item">
-                  <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                      <h6 class="mb-1">${fav.title}</h6>
-                      <small class="text-muted">${fav.type} • ${timeStr}</small>
+                  <button class="list-group-item list-group-item-action text-start py-2 fav-open-btn" data-history-type="${fav.type}" data-history-query="${fav.item_id}" title="${fav.title}">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <div>
+                        <strong class="d-block">${fav.title}</strong>
+                        <small class="text-muted">${fav.type} • ${timeStr}</small>
+                      </div>
+                      <button class="btn btn-sm btn-outline-danger remove-fav-btn" data-item-id="${fav.item_id}">Remove</button>
                     </div>
-                    <button class="btn btn-sm btn-outline-danger remove-fav-btn" data-item-id="${fav.item_id}">Remove</button>
-                  </div>
-                </div>
-              `;
+                  </button>
+                `;
             });
             html += '</div>';
             favsList.innerHTML = html;
 
-            // Add remove handlers
+            // Add remove handlers and open handlers for favorites
             document.querySelectorAll('.remove-fav-btn').forEach(btn => {
-              btn.addEventListener('click', function() {
+              btn.addEventListener('click', function(e) {
+                e.stopPropagation();
                 const itemId = this.dataset.itemId;
                 removeFavorite(itemId);
+              });
+            });
+            document.querySelectorAll('.fav-open-btn').forEach(btn => {
+              btn.addEventListener('click', function() {
+                const type = this.dataset.historyType;
+                const query = this.dataset.historyQuery;
+                repeatSearch(type, query);
               });
             });
           });
