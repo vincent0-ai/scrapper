@@ -135,4 +135,43 @@ input.form-control, select.form-select{
     .col-md-10{ margin-left: 8px; }
 }
 
+/* Mobile: tighten buttons, enable wrapping and prevent header overlap */
+@media (max-width: 576px){
+    /* Make action buttons smaller and allow them to wrap */
+    .btn, .btn-sm{ padding: 6px 8px; font-size: 0.88rem; border-radius: 8px; }
+    .btn{ min-width: 0; }
+    .d-grid.d-sm-flex .btn{ flex: 1 1 auto; min-width: 0; }
+
+    /* Ensure header layout stacks cleanly */
+    .card-header .d-flex.flex-column,
+    .card-header .d-flex.flex-md-row{ flex-direction: column !important; align-items: flex-start; gap: 8px; }
+    .card-header .flex-grow-1{ min-width: 0; }
+
+    /* Make titles smaller and prevent overflow */
+    .card-header h3, .card-header h4{ font-size: 1.05rem; margin: 0; }
+    .card-header .text-muted{ display:block; }
+
+    /* Wrap long pre blocks and lyrics without horizontal scroll */
+    .card-body pre, #lyrics-text, #medium-content pre{ white-space: pre-wrap; word-break: break-word; overflow-wrap: anywhere; }
+
+    /* Favorite / copy / download buttons: compact and stacked when needed */
+    .favorite-btn, .favorite-btn-remove, #copy-lyrics-btn, .copy-medium-btn{ padding:6px 10px; font-size:0.88rem; }
+
+    /* Search history list items: reduce padding and wrap text */
+    #search-history .list-group-item{ padding-top:8px; padding-bottom:8px; white-space: normal; overflow-wrap: anywhere; }
+
+    /* Ensure inline link text does not overflow */
+    .text-truncate, a.text-truncate{ display:block; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+    /* Reduce gaps slightly to avoid overlap */
+    .d-flex.gap-2{ gap: 6px !important; }
+}
+
+/* Small screens: also tweak medium breakpoint to avoid overlap on small laptops */
+@media (max-width: 900px){
+    .card-header .d-flex.flex-md-row{ flex-direction: column !important; }
+    .col-md-2{ flex: 0 0 200px; max-width: 200px; }
+}
+
+
 
