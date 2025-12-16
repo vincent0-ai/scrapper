@@ -56,6 +56,35 @@
       </div>
     </div>
 
+    <!-- Small-screen history button in navbar -->
+    <button class="btn btn-sm btn-outline-secondary d-lg-none position-fixed" style="right:18px;bottom:18px;z-index:1200;" data-bs-toggle="offcanvas" data-bs-target="#historyOffcanvas" aria-controls="historyOffcanvas">History</button>
+
+    <!-- Offcanvas: Search History for Mobile -->
+    <div class="offcanvas offcanvas-start" tabindex="-1" id="historyOffcanvas" aria-labelledby="historyOffcanvasLabel">
+      <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="historyOffcanvasLabel">📋 Search History</h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+      </div>
+      <div class="offcanvas-body">
+        <div id="search-history-mobile">
+          <p class="text-muted small">No searches yet</p>
+        </div>
+        <button class="btn btn-sm btn-outline-danger mt-3 w-100" id="clear-history-btn-mobile">Clear History</button>
+      </div>
+    </div>
+
+    <script>
+      // Clear mobile history button wiring
+      document.addEventListener('click', function(e){
+        if (e.target && e.target.id === 'clear-history-btn-mobile'){
+          if (confirm('Clear all search history?')){
+            fetch('/clear_search_history', { method: 'POST' })
+              .then(r => r.json()).then(()=>{ loadSearchHistory(); });
+          }
+        }
+      });
+    </script>
+
     <!-- Favorites Modal -->
     <div class="modal fade" id="favoritesModal" tabindex="-1">
       <div class="modal-dialog modal-lg">
@@ -86,11 +115,13 @@
         fetch('/search_history')
           .then(response => response.json())
           .then(data => {
-            const historyDiv = document.getElementById('search-history');
+            const desktopDiv = document.getElementById('search-history');
+            const mobileDiv = document.getElementById('search-history-mobile');
             const history = data.history || [];
             
             if (history.length === 0) {
-              historyDiv.innerHTML = '<p class="text-muted small">No searches yet</p>';
+              if (desktopDiv) desktopDiv.innerHTML = '<p class="text-muted small">No searches yet</p>';
+              if (mobileDiv) mobileDiv.innerHTML = '<p class="text-muted small">No searches yet</p>';
               return;
             }
 
@@ -112,13 +143,16 @@
               `;
             });
             html += '</div>';
-            historyDiv.innerHTML = html;
+            if (desktopDiv) desktopDiv.innerHTML = html;
+            if (mobileDiv) mobileDiv.innerHTML = html;
 
-            // Add click handlers
+            // Add click handlers (delegated)
             document.querySelectorAll('[data-history-type]').forEach(btn => {
               btn.addEventListener('click', function() {
                 const type = this.dataset.historyType;
                 const query = this.dataset.historyQuery;
+                // If mobile offcanvas is open, close it
+                try{ const off = document.getElementById('historyOffcanvas'); if (off){ const bs = bootstrap.Offcanvas.getInstance(off) || new bootstrap.Offcanvas(off); bs.hide(); }}catch(e){}
                 repeatSearch(type, query);
               });
             });
