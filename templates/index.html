@@ -93,33 +93,10 @@
             </div>
         </div>
 
-        <!-- Sidebar / History -->
-        <aside class="col-12 col-lg-4 sidebar-col">
-            <div id="history-panel" class="history-panel">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <strong>History</strong>
-                    <small class="text-muted">Recent results</small>
-                </div>
-                <div id="history-content">
-                    <!-- History entries will be moved here to avoid duplication on mobile -->
-                </div>
-            </div>
-        </aside>
+        <!-- (History sidebar removed here — use `#search-history` from base.html instead) -->
     </div>
 
-    <!-- Mobile history toggle -->
-    <button id="history-toggle" class="history-toggle-mobile d-lg-none" aria-label="Show history">History</button>
-
-    <!-- Mobile history overlay -->
-    <div id="mobile-history" class="mobile-history-overlay">
-        <div class="panel">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <strong>History</strong>
-                <button id="mobile-history-close" class="btn btn-sm btn-light">Close</button>
-            </div>
-            <div id="mobile-history-content"></div>
-        </div>
-    </div>
+    <!-- History is managed by base layout `#search-history` -->
 
 </div>
 
@@ -130,10 +107,8 @@
     const simpmusicForm = document.getElementById('simpmusic-form');
     const resultsArea = document.getElementById('results-area');
     const historyContent = document.getElementById('history-content');
-    const mobileHistory = document.getElementById('mobile-history');
-    const mobileHistoryContent = document.getElementById('mobile-history-content');
-    const historyToggle = document.getElementById('history-toggle');
-    const mobileHistoryClose = document.getElementById('mobile-history-close');
+    // Prefer the global search history provided by base.html
+    const searchHistoryDiv = document.getElementById('search-history') || historyContent;
 
     lyricsForm.addEventListener('submit', function(e) {
         e.preventDefault();
@@ -230,22 +205,95 @@
             const item = document.createElement('div');
             item.className = 'history-item';
             item.innerHTML = el.innerHTML;
-            historyContent.prepend(item);
-            // remove original to avoid duplicate content on mobile
+            // copy any data- attributes from the original .history element (e.g., data-task-id or data-replay-url)
+            for (let i = 0; i < el.attributes.length; i++){
+                const attr = el.attributes[i];
+                if (attr.name.startsWith('data-')){
+                    item.setAttribute(attr.name, attr.value);
+                }
+            }
+            // Prefer `#search-history` from base.html if present
+            if (searchHistoryDiv){
+                // remove placeholder if present
+                if (searchHistoryDiv.children.length === 1 && searchHistoryDiv.querySelector('.text-muted')){
+                    searchHistoryDiv.innerHTML = '';
+                }
+                searchHistoryDiv.prepend(item);
+            } else if (historyContent) {
+                historyContent.prepend(item);
+            }
+            // remove original to avoid duplicate content
             el.remove();
         });
-        // keep mobile copy in sync
-        mobileHistoryContent.innerHTML = historyContent.innerHTML;
+        // keep base `#search-history` as the single source of truth
+        if (searchHistoryDiv && historyContent) searchHistoryDiv.innerHTML = searchHistoryDiv.innerHTML;
     }
 
-    // History toggle for mobile
-    historyToggle && historyToggle.addEventListener('click', () => {
-        mobileHistoryContent.innerHTML = historyContent.innerHTML;
-        mobileHistory.classList.add('open');
-    });
-    mobileHistoryClose && mobileHistoryClose.addEventListener('click', () => {
-        mobileHistory.classList.remove('open');
-    });
+    // Click handler: when a history item (or its title) is clicked, attempt to load the saved result
+    function handleHistoryClick(e){
+        const el = e.target.closest('.history-item');
+        if (!el) return;
+
+        // If the history item has an embedded payload template, use it
+        const payload = el.querySelector('.history-payload');
+        if (payload){
+            resultsArea.innerHTML = payload.innerHTML;
+            return;
+        }
+
+        // If there's a task id, call status endpoint and fetch final result
+        const taskId = el.getAttribute('data-task-id') || el.dataset.taskId;
+        if (taskId){
+            resultsArea.innerHTML = `<div class="card"><div class="card-body text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div><p class="mt-2">Loading history item...</p></div></div>`;
+            // fetch latest status/result
+            fetch(`/status/${taskId}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.state === 'SUCCESS' || data.status === 'SUCCESS'){
+                        resultsArea.innerHTML = data.result || data.html || '';
+                    } else if (data.state === 'PENDING' || data.status === 'PENDING'){
+                        // if still pending, show message and start polling
+                        resultsArea.innerHTML = `<div class="alert alert-info">Result is pending. Polling...</div>`;
+                        pollJobStatus(taskId);
+                    } else {
+                        resultsArea.innerHTML = data.result || data.html || `<div class="alert alert-danger">Unable to load history item.</div>`;
+                    }
+                })
+                .catch(() => {
+                    resultsArea.innerHTML = `<div class="alert alert-danger">Failed to load history item.</div>`;
+                });
+            return;
+        }
+
+        // If there's a replay URL, fetch it directly
+        const replayUrl = el.getAttribute('data-replay-url') || el.dataset.replayUrl;
+        if (replayUrl){
+            resultsArea.innerHTML = `<div class="card"><div class="card-body text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div><p class="mt-2">Loading history item...</p></div></div>`;
+            fetch(replayUrl)
+                .then(r => r.text())
+                .then(txt => { resultsArea.innerHTML = txt; })
+                .catch(() => { resultsArea.innerHTML = `<div class="alert alert-danger">Failed to load history item.</div>`; });
+            return;
+        }
+
+        // Fallback: if the history item contains a link, follow it and load the content
+        const anchor = el.querySelector('a[href]');
+        if (anchor){
+            const href = anchor.getAttribute('href');
+            resultsArea.innerHTML = `<div class="card"><div class="card-body text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div><p class="mt-2">Loading history item...</p></div></div>`;
+            fetch(href)
+                .then(r => r.text())
+                .then(txt => { resultsArea.innerHTML = txt; })
+                .catch(() => { resultsArea.innerHTML = `<div class="alert alert-danger">Failed to load history item.</div>`; });
+            return;
+        }
+
+        // Nothing actionable found
+        alert('This history item cannot be reloaded from the UI.');
+    }
+
+    // Attach click handler to the base `#search-history` if available, otherwise fallback to the local historyContent
+    (searchHistoryDiv || historyContent)?.addEventListener('click', handleHistoryClick);
 
     // This makes the dynamically added "Copy" and "Download" buttons work
     document.addEventListener('click', function(e) {
