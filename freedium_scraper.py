@@ -38,7 +38,7 @@ class FreediumScraper:
 
 
         # Content: prefer <article> or common post container classes
-        content_container = soup.find("article") or soup.find("div", class_="mt-8 main-content") or soup.find("div", class_="content")
+        content_container = soup.find("div", class_="mt-8 main-content")
         if content_container:
             paragraphs = content_container.find_all(["p", "h2", "h3", "li"])  # include headings and list items
             content = "\n\n".join(p.get_text(strip=True) for p in paragraphs if p.get_text(strip=True))
@@ -60,8 +60,8 @@ class FreediumScraper:
             return {"error": "Failed to fetch article content."}
 
         article = self.parse_article(html)
-        article["url"] = url
-        db_manager.save_article(url, article)
+        title = article.get("title", "")
+        db_manager.save_article(title, article)
         return article
 
     def scrape_bulk(self, urls: List[str]) -> List[Dict]:
