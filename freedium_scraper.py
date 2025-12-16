@@ -22,33 +22,23 @@ class FreediumScraper:
         soup = BeautifulSoup(html, "html.parser")
 
         # Title
-        title_tag = soup.find("h1")
+        title_tag = soup.find("h1", class_ = "pt-6 pb-2 font-sans text-3xl font-bold text-gray-900 break-normal dark:text-gray-100 md:text-4xl")
         title = title_tag.get_text(strip=True) if title_tag else ""
 
         # Author
         author = ""
-        if author_tag := soup.find("meta", attrs={"name": "author"}):
-            author = author_tag.get("content", "")
+        if author_tag := soup.find("a", class_="block font-semibold text-gray-900 dark:text-white __web-inspector-hide-shortcut__"):
+            author = author_tag.get("href", "")
         else:
             # Freedium sometimes puts the author in a link with rel=author
             if a := soup.find("a", rel="author"):
                 author = a.get_text(strip=True)
+            else:
+                return None  # Cannot find author, likely not a valid Freedium article
 
-        # Published date
-        published = ""
-        if pub := soup.find("meta", attrs={"property": "article:published_time"}):
-            published = pub.get("content", "")
-
-        # Tags
-        tags = []
-        # try common selectors for tag links
-        for t in soup.select("a.tag, a.topic, .tags a"):
-            text = t.get_text(strip=True)
-            if text:
-                tags.append(text)
 
         # Content: prefer <article> or common post container classes
-        content_container = soup.find("article") or soup.find("div", class_="post-content") or soup.find("div", class_="content")
+        content_container = soup.find("article") or soup.find("div", class_="mt-8 main-content") or soup.find("div", class_="content")
         if content_container:
             paragraphs = content_container.find_all(["p", "h2", "h3", "li"])  # include headings and list items
             content = "\n\n".join(p.get_text(strip=True) for p in paragraphs if p.get_text(strip=True))
@@ -56,7 +46,7 @@ class FreediumScraper:
             # fallback to all paragraphs
             content = "\n\n".join(p.get_text(strip=True) for p in soup.find_all("p"))
 
-        return {"title": title, "author": author, "published": published, "tags": tags, "content": content}
+        return {"title": title, "author": author, "content": content}
 
     def scrape_single(self, url: str) -> Dict:
         # Check DB cache first
