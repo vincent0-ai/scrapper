@@ -173,5 +173,26 @@ input.form-control, select.form-select{
     .col-md-2{ flex: 0 0 200px; max-width: 200px; }
 }
 
+/* Layout: fixed sidebar + flexible main content */
+.sidebar-fixed{
+    flex: 0 0 260px;
+    max-width: 260px;
+    min-width: 220px;
+}
+.main-fluid{
+    flex: 1 1 auto;
+    min-width: 0; /* allow children to shrink properly */
+}
+
+/* Ensure the row uses flex and doesn't wrap sidebar unexpectedly */
+.container-fluid > .row{ display:flex; }
+
+/* Responsive: stack sidebar above main on small screens */
+@media (max-width: 767px){
+    .sidebar-fixed{ flex: 0 0 100%; max-width: 100%; border-right: none; border-bottom: 1px solid rgba(0,0,0,0.06); }
+    .main-fluid{ flex: 0 0 100%; max-width: 100%; }
+}
+
+
 
 

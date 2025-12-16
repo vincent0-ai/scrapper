@@ -39,8 +39,8 @@
     </nav>
     <div class="container-fluid">
       <div class="row">
-        <!-- Sidebar with Search History -->
-        <div class="col-md-2 bg-light p-3" style="min-height: 100vh; border-right: 1px solid #ddd;">
+        <!-- Sidebar with Search History (fixed width) -->
+        <div class="sidebar-fixed bg-light p-3" style="min-height: 100vh; border-right: 1px solid #ddd;">
           <div class="sidebar-content">
             <h5 class="mb-2">📋 Search History</h5>
             <div id="search-history" class="mt-2">
@@ -49,9 +49,9 @@
             <button class="btn btn-sm btn-outline-danger mt-2 w-100" id="clear-history-btn">Clear History</button>
           </div>
         </div>
-        <!-- Main Content -->
-        <div class="col-md-10">
-            {% block content %}{% endblock %}
+        <!-- Main Content (flexible) -->
+        <div class="main-fluid p-3">
+          {% block content %}{% endblock %}
         </div>
       </div>
     </div>
@@ -126,6 +126,14 @@
       }
 
       function repeatSearch(type, query) {
+        // If the favorites modal is open, close it to reveal results
+        try{
+          const favEl = document.getElementById('favoritesModal');
+          if (favEl){
+            const bs = bootstrap.Modal.getInstance(favEl) || new bootstrap.Modal(favEl);
+            bs.hide();
+          }
+        }catch(e){ /* ignore if bootstrap not available */ }
         // Perform the same AJAX submission as index.js so we don't trigger a full page reload.
         let form, input, url;
         if (type === 'lyrics'){
