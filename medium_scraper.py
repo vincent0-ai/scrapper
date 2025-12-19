@@ -8,6 +8,36 @@ from common import fetch_with_flaresolverr, get_random_proxy  # Import common ut
 from db import db_manager # Import the database manager
  # Adjust as needed
 
+import re
+
+def clean_recon_article(raw_text):
+    # 1. Remove tags (strip HTML tags)
+    text = re.sub(r'<[^>]+>', '', raw_text)
+    
+    # 2. Remove specific website UI elements and footers
+    ui_elements = [
+        r"Sign up\s+Sign in", 
+        r"Top highlight", 
+        r"Listen\s+Share",
+        r"\d+\s+\d+\s+19", # Social metrics like claps/comments
+        r"Write a response.*", # End of article sections
+        r"Help\s+Status\s+About.*",
+        r"Jul \d+|Aug \d+", # Date snippets in comments
+        r"Reply\s+\d+\s+reply"
+    ]
+    for pattern in ui_elements:
+        text = re.sub(pattern, '', text, flags=re.DOTALL | re.IGNORECASE)
+
+    # 3. Clean up excessive newlines and whitespace
+    text = re.sub(r'\n\s*\n', '\n\n', text)
+    
+    # 4. Extract the core article between Title and Author info
+    # This helps isolate the body from the legal/nav footer
+    main_match = re.search(r"(ARTICLE TITLE.*?)\n\s*CyberVolt is a", text, re.DOTALL)
+    if main_match:
+        text = main_match.group(1)
+
+    return text.strip()
 
 class MediumScraper:
     def __init__(self, concurrency: int = 4):
@@ -67,7 +97,10 @@ class MediumScraper:
         else:
             # Fallback if the primary selector doesn't work
             content = "\n\n".join(p.get_text(strip=True) for p in soup.find_all("p"))
-            
+
+        # Clean the scraped content to remove UI text, tags and excess whitespace
+        content = clean_recon_article(content) if content else content
+        
         return {"title": title_text, "author": author_text, "published": publish_text, "tags": tags, "content": content}
 
     def scrape_single(self, url: str) -> Dict:
