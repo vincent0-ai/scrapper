@@ -36,6 +36,41 @@ SITES = {
 
 from db import db_manager # Import the database manager
 
+import re
+
+def clean_recon_article(raw_text):
+    # 1. Remove tags (strip HTML tags)
+    text = re.sub(r'<[^>]+>', '', raw_text)
+    
+    # 2. Remove specific website UI elements and footers
+    ui_elements = [
+        r"Sign up\s+Sign in", 
+        r"Top highlight", 
+        r"Listen\s+Share",
+        r"\d+\s+\d+\s+19", # Social metrics like claps/comments
+        r"Write a response.*", # End of article sections
+        r"Help\s+Status\s+About.*",
+        r"Jul \d+|Aug \d+", # Date snippets in comments
+        r"Reply\s+\d+\s+reply"
+    ]
+    for pattern in ui_elements:
+        text = re.sub(pattern, '', text, flags=re.DOTALL | re.IGNORECASE)
+
+    # 3. Clean up excessive newlines and whitespace
+    text = re.sub(r'\n\s*\n', '\n\n', text)
+    
+    # 4. Extract the core article between Title and Author info
+    # This helps isolate the body from the legal/nav footer
+    main_match = re.search(r"(ARTICLE TITLE.*?)\n\s*CyberVolt is a", text, re.DOTALL)
+    if main_match:
+        text = main_match.group(1)
+
+    return text.strip()
+
+
+
+
+
 def search_song(query):
     """
     Searches for a song across multiple sites and returns the first found lyrics.
@@ -78,13 +113,16 @@ def _search_scrape(query, site_config):
     title = title_element.get_text(strip=True) if title_element else "Unknown Title"
 
     # Use the configured artist_selector (if available)
-    artist_element = song_soup.select_one(site_config.get("artist_selector", ""))
+    artist_selector = site_config.get("artist_selector")
+    artist_element = song_soup.select_one(artist_selector) if artist_selector else None
     artist = artist_element.get_text(strip=True) if artist_element else "Unknown Artist"
 
     lyrics_container = song_soup.select_one(site_config["lyrics_container_selector"])
     
     if lyrics_container:
         lyrics_text = lyrics_container.get_text(separator='\n', strip=True)
+        cleaned_content = clean_recon_article(lyrics_text)
+        lyrics_text = cleaned_content if cleaned_content else lyrics_text
         lyrics_data = {"title": title, "artist": artist, "lyrics": lyrics_text, "source": urljoin(song_url, '/')}
         db_manager.save_lyrics(query, lyrics_data) # Save to DB
         return lyrics_data
