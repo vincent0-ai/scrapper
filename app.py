@@ -28,13 +28,21 @@ def search_lyrics():
     if not query:
         return jsonify({"error": "Search query is required."}), 400
 
-    # Add to search history
+    # Add to search history (initial entry -- metadata/title may be added later once we have the scraped result)
     db_manager.add_to_search_history('lyrics', query)
 
     # Try to get from DB first
     cached_result = db_manager.get_lyrics(query)
     if cached_result:
         cached_result.pop('_id', None) # Remove MongoDB's internal _id field if present
+
+        # If we have a cached title, add another history entry with metadata so UI shows the title immediately
+        if isinstance(cached_result, dict) and cached_result.get('title'):
+            try:
+                db_manager.add_to_search_history('lyrics', query, metadata={'title': cached_result.get('title')})
+            except Exception:
+                pass
+
         # Defensive check: Ensure expected fields are strings before rendering
         if isinstance(cached_result, dict):
             for key in ['title', 'lyrics', 'artist', 'source']:
@@ -68,13 +76,19 @@ def scrape_medium():
     if not url:
         return jsonify({"error": "Medium URL is required."}), 400
 
-    # Add to search history
+    # Add to search history (initial entry)
     db_manager.add_to_search_history('medium', url)
 
     # Try to get from DB first
     cached_result = db_manager.get_article(url)
     if cached_result:
         cached_result.pop('_id', None)
+        # Add a follow-up history entry with explicit title metadata so the history shows the article title immediately
+        if cached_result.get('title'):
+            try:
+                db_manager.add_to_search_history('medium', url, metadata={'title': cached_result.get('title')})
+            except Exception:
+                pass
         cached_result['is_favorite'] = db_manager.is_favorite(url)
         return jsonify({"status": "SUCCESS", "result": render_template('medium_result.html', article=cached_result)})
 
@@ -89,13 +103,19 @@ def scrape_freedium():
     if not url:
         return jsonify({"error": "Freedium URL is required."}), 400
 
-    # Add to search history
+    # Add to search history (initial entry)
     db_manager.add_to_search_history('freedium', url)
 
     # Try to get from DB first
     cached_result = db_manager.get_article(url)
     if cached_result:
         cached_result.pop('_id', None)
+        # Add a follow-up history entry with explicit title metadata so the history shows the article title immediately
+        if cached_result.get('title'):
+            try:
+                db_manager.add_to_search_history('freedium', url, metadata={'title': cached_result.get('title')})
+            except Exception:
+                pass
         cached_result['is_favorite'] = db_manager.is_favorite(url)
         return jsonify({"status": "SUCCESS", "result": render_template('freedium_result.html', article=cached_result)})
 
@@ -211,10 +231,41 @@ URL
 def get_search_history():
     search_type = request.args.get('type')  # Optional: filter by type (lyrics, medium, simpmusic)
     history = db_manager.get_search_history(search_type)
-    # Clean up for JSON serialization
+
+    # Clean up for JSON serialization and compute a friendly display title
     for item in history:
         item.pop('_id', None)
         item['timestamp'] = item['timestamp'].isoformat() if hasattr(item['timestamp'], 'isoformat') else str(item['timestamp'])
+
+        # Prefer an explicit metadata.title if present
+        meta_title = (item.get('metadata') or {}).get('title')
+        if meta_title:
+            item['display'] = meta_title
+            continue
+
+        # For article URLs, look up stored article title
+        if item.get('type') in ('medium', 'freedium'):
+            try:
+                article = db_manager.get_article(item.get('query'))
+                if article and 'title' in article:
+                    item['display'] = article.get('title')
+                    continue
+            except Exception:
+                pass
+
+        # For lyrics searches, look up stored lyrics title
+        if item.get('type') == 'lyrics':
+            try:
+                lyrics = db_manager.get_lyrics(item.get('query'))
+                if lyrics and 'title' in lyrics:
+                    item['display'] = lyrics.get('title')
+                    continue
+            except Exception:
+                pass
+
+        # Fallback to showing the raw query (URL or search text)
+        item['display'] = item.get('query')
+
     return jsonify({"status": "SUCCESS", "history": history})
 
 @app.route('/clear_search_history', methods=['POST'])

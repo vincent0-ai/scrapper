@@ -127,15 +127,22 @@
             }
 
             let html = '<div class="list-group list-group-sm">';
+            const seen = new Set();
             history.slice(0, 15).forEach(item => {
+              const key = `${item.type}|${item.query}`;
+              if (seen.has(key)) return; // skip duplicates, prefer newest
+              seen.add(key);
+
               const time = new Date(item.timestamp);
               const timeStr = time.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-              const displayText = item.query.substring(0, 25) + (item.query.length > 25 ? '...' : '');
+              const rawDisplay = (item.display || item.query || '');
+              const displayText = rawDisplay.substring(0, 25) + (rawDisplay.length > 25 ? '...' : '');
+              const titleAttr = rawDisplay.replace(/"/g, '&quot;');
               html += `
                 <button class="list-group-item list-group-item-action text-start py-2" 
                         data-history-type="${item.type}" 
                         data-history-query="${item.query}"
-                        title="${item.query}">
+                        title="${titleAttr}">
                   <div class="d-flex justify-content-between align-items-center">
                     <small>${displayText}</small>
                     <small class="text-muted">${timeStr}</small>
