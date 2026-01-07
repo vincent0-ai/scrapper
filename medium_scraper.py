@@ -90,13 +90,39 @@ class MediumScraper:
         # More robust content extraction for Medium articles
         # Medium often uses a <section> with a specific data-field attribute for the main content.
         article_body = soup.find("section", attrs={"data-field": "body"})
-        if article_body:
-            paragraphs = article_body.find_all("p")
-            # Join paragraphs with double newlines to preserve paragraph breaks
-            content = "\n\n".join(p.get_text(strip=True) for p in paragraphs)
-        else:
-            # Fallback if the primary selector doesn't work
-            content = "\n\n".join(p.get_text(strip=True) for p in soup.find_all("p"))
+        target = article_body if article_body else soup
+        
+        tags_to_extract = ["p", "pre", "h1", "h2", "h3", "h4", "h5", "h6", "blockquote", "ul", "ol"]
+        elements = target.find_all(tags_to_extract)
+        
+        # Filter out nested elements (e.g. p inside blockquote, or li inside ul)
+        unique_elements = []
+        for el in elements:
+            if not any(parent in elements for parent in el.parents):
+                unique_elements.append(el)
+        
+        content_parts = []
+        for el in unique_elements:
+            text = el.get_text(strip=True)
+            if not text:
+                continue
+                
+            if el.name == 'pre':
+                content_parts.append(f"```\n{text}\n```")
+            elif el.name in ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']:
+                # Simple header formatting
+                content_parts.append(f"## {text}") 
+            elif el.name == 'blockquote':
+                content_parts.append(f"> {text}")
+            elif el.name in ['ul', 'ol']:
+                # Handle lists specifically to keep them somewhat formatted
+                items = [li.get_text(strip=True) for li in el.find_all('li')]
+                list_text = "\n".join(f"- {item}" for item in items)
+                content_parts.append(list_text)     
+            else:
+                content_parts.append(text)
+
+        content = "\n\n".join(content_parts)
 
         # Clean the scraped content to remove UI text, tags and excess whitespace
         content = clean_recon_article(content) if content else content
