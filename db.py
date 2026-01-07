@@ -64,9 +64,29 @@ class MongoDBManager:
             # Index for favorites - ordered by timestamp
             self.db.favorites.create_index([("timestamp", -1)])
             self.db.favorites.create_index([("type", 1), ("timestamp", -1)])
-            self.db.favorites.create_index([("item_id", 1)], unique=True)
+            self.db.favorites.create_index([("item_id", 1), ("user_id", 1)], unique=True)
+            self.db.users.create_index([("username", 1)], unique=True)
 
             print("MongoDB TTL indexes created/updated.")
+
+    def create_user(self, username, password_hash):
+        if self.db is None: return None
+        try:
+            return self.db.users.insert_one({"username": username, "password": password_hash})
+        except Exception:
+            return None
+
+    def get_user_by_username(self, username):
+        if self.db is None: return None
+        return self.db.users.find_one({"username": username})
+
+    def get_user_by_id(self, user_id):
+        if self.db is None: return None
+        from bson.objectid import ObjectId
+        try:
+            return self.db.users.find_one({"_id": ObjectId(user_id)})
+        except:
+            return None
 
     def get_lyrics(self, query):
         if getattr(self, "db", None) is None:
@@ -90,53 +110,74 @@ class MongoDBManager:
             return
         self.db.articles.update_one({"url": url}, {"$set": {**article_data, "url": url, "timestamp": datetime.now()}}, upsert=True)
 
-    def add_to_search_history(self, search_type, query, metadata=None):
+    def add_to_search_history(self, search_type, query, metadata=None, user_id=None):
         if self.db is None: return
         history_entry = {
             "type": search_type,  # 'lyrics', 'medium', 'simpmusic'
             "query": query,
             "timestamp": datetime.now(),
-            "metadata": metadata or {}
+            "metadata": metadata or {},
+            "user_id": user_id
         }
         self.db.search_history.insert_one(history_entry)
 
-    def get_search_history(self, search_type=None, limit=20):
+    def get_search_history(self, search_type=None, user_id=None, limit=20):
         if self.db is None: return []
-        query_filter = {"type": search_type} if search_type else {}
+        query_filter = {}
+        if search_type:
+            query_filter["type"] = search_type
+        if user_id:
+            query_filter["user_id"] = user_id
+        else:
+            # If no user_id, decide if we show global (no user_id) or nothing
+            # Let's show anonymous history if user_id is None
+            query_filter["user_id"] = None
+            
         return list(self.db.search_history.find(query_filter).sort("timestamp", -1).limit(limit))
 
-    def clear_search_history(self, search_type=None):
+    def clear_search_history(self, search_type=None, user_id=None):
         if self.db is None: return
-        query_filter = {"type": search_type} if search_type else {}
+        query_filter = {}
+        if search_type:
+            query_filter["type"] = search_type
+        if user_id:
+            query_filter["user_id"] = user_id
+        else:
+            query_filter["user_id"] = None
         self.db.search_history.delete_many(query_filter)
 
-    def add_to_favorites(self, item_type, item_id, title, metadata=None):
+    def add_to_favorites(self, item_type, item_id, title, metadata=None, user_id=None):
         if self.db is None: return
+        if not user_id: return # Guests cannot save favorites in this design?
+        
         favorite_entry = {
             "type": item_type,  # 'lyrics', 'medium'
             "item_id": item_id,  # url or query
             "title": title,
             "timestamp": datetime.now(),
-            "metadata": metadata or {}
+            "metadata": metadata or {},
+            "user_id": user_id
         }
         self.db.favorites.update_one(
-            {"item_id": item_id},
+            {"item_id": item_id, "user_id": user_id},
             {"$set": favorite_entry},
             upsert=True
         )
 
-    def remove_from_favorites(self, item_id):
-        if self.db is None: return
-        self.db.favorites.delete_one({"item_id": item_id})
+    def remove_from_favorites(self, item_id, user_id=None):
+        if self.db is None or not user_id: return
+        self.db.favorites.delete_one({"item_id": item_id, "user_id": user_id})
 
-    def get_favorites(self, item_type=None, limit=100):
-        if self.db is None: return []
-        query_filter = {"type": item_type} if item_type else {}
+    def get_favorites(self, item_type=None, user_id=None, limit=100):
+        if self.db is None or not user_id: return []
+        query_filter = {"user_id": user_id}
+        if item_type:
+            query_filter["type"] = item_type
         return list(self.db.favorites.find(query_filter).sort("timestamp", -1).limit(limit))
 
-    def is_favorite(self, item_id):
-        if self.db is None: return False
-        return self.db.favorites.find_one({"item_id": item_id}) is not None
+    def is_favorite(self, item_id, user_id=None):
+        if self.db is None or not user_id: return False
+        return self.db.favorites.find_one({"item_id": item_id, "user_id": user_id}) is not None
 
 # Initialize the DB manager globally
 db_manager = MongoDBManager()

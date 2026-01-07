@@ -8,100 +8,113 @@
 
     <div class="row">
         <div class="col-12 col-lg-8 main-col">
+            <div class="d-flex justify-content-end mb-3">
+                {% if current_user.is_authenticated %}
+                <span class="me-3 align-self-center">Welcome, <strong>{{ current_user.username }}</strong></span>
+                <a href="/logout" class="btn btn-outline-danger">Logout</a>
+                {% else %}
+                <a href="/login" class="btn btn-outline-primary me-2">Login</a>
+                <a href="/register" class="btn btn-primary">Register</a>
+                {% endif %}
+            </div>
             <h1 class="mb-4 text-center">🔍 Web Scraper</h1>
 
             <div class="row g-3">
-        <!-- Lyrics Scraper Card -->
-        <div class="col-12 col-lg-6">
-            <div class="card h-100">
-                <div class="card-header">
-                    <h4>🎵 Lyrics Scraper</h4>
-                </div>
-                <div class="card-body d-flex flex-column">
-                    <form id="lyrics-form" class="w-100">
-                        <div class="mb-2">
-                            <input type="text" name="query" class="form-control" placeholder="Song title or artist" required>
+                <!-- Lyrics Scraper Card -->
+                <div class="col-12 col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h4>🎵 Lyrics Scraper</h4>
                         </div>
-                        <button class="btn btn-primary w-100" type="submit">Search Lyrics</button>
-                    </form>
+                        <div class="card-body d-flex flex-column">
+                            <form id="lyrics-form" class="w-100">
+                                <div class="mb-2">
+                                    <input type="text" name="query" class="form-control"
+                                        placeholder="Song title or artist" required>
+                                </div>
+                                <button class="btn btn-primary w-100" type="submit">Search Lyrics</button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
 
-        <!-- Medium Scraper Card -->
-        <div class="col-12 col-lg-6">
-            <div class="card h-100">
-                <div class="card-header">
-                    <h4>📰 Medium Article</h4>
-                </div>
-                <div class="card-body d-flex flex-column">
-                    <form id="medium-form" class="w-100">
-                        <div class="mb-2">
-                            <input type="url" name="url" class="form-control" placeholder="Medium.com article URL" required>
+                <!-- Medium Scraper Card -->
+                <div class="col-12 col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h4>📰 Medium Article</h4>
                         </div>
-                        <button class="btn btn-primary w-100" type="submit">Scrape Article</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Freedium Scraper Card -->
-        <div class="col-12 col-lg-6 mt-2">
-            <div class="card h-100">
-                <div class="card-header">
-                    <h4>📰 Freedium Article</h4>
-                </div>
-                <div class="card-body d-flex flex-column">
-                    <form id="freedium-form" class="w-100">
-                        <div class="mb-2">
-                            <input type="url" name="url" class="form-control" placeholder="Freedium article URL" required>
+                        <div class="card-body d-flex flex-column">
+                            <form id="medium-form" class="w-100">
+                                <div class="mb-2">
+                                    <input type="url" name="url" class="form-control"
+                                        placeholder="Medium.com article URL" required>
+                                </div>
+                                <button class="btn btn-primary w-100" type="submit">Scrape Article</button>
+                            </form>
                         </div>
-                        <button class="btn btn-primary w-100" type="submit">Scrape Freedium</button>
-                    </form>
+                    </div>
                 </div>
-            </div>
-        </div>
+
+                <!-- Freedium Scraper Card -->
+                <div class="col-12 col-lg-6 mt-2">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h4>📰 Freedium Article</h4>
+                        </div>
+                        <div class="card-body d-flex flex-column">
+                            <form id="freedium-form" class="w-100">
+                                <div class="mb-2">
+                                    <input type="url" name="url" class="form-control" placeholder="Freedium article URL"
+                                        required>
+                                </div>
+                                <button class="btn btn-primary w-100" type="submit">Scrape Freedium</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="row g-3 mt-1">
-        <!-- SimpMusic API Card -->
-        <div class="col-12 col-lg-6">
-            <div class="card h-100">
-                <div class="card-header">
-                    <h4>🎶 SimpMusic API</h4>
-                </div>
-                <div class="card-body d-flex flex-column">
-                    <form id="simpmusic-form" class="w-100">
-                        <div class="mb-2">
-                            <select class="form-select" name="type">
-                                <option value="general">General</option>
-                                <option value="song" selected>Song</option>
-                                <option value="artist">Artist</option>
-                                <option value="album">Album</option>
-                            </select>
+                <!-- SimpMusic API Card -->
+                <div class="col-12 col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h4>🎶 SimpMusic API</h4>
                         </div>
-                        <div class="mb-2">
-                            <input type="text" name="query" class="form-control" placeholder="Artist, song, album..." required>
+                        <div class="card-body d-flex flex-column">
+                            <form id="simpmusic-form" class="w-100">
+                                <div class="mb-2">
+                                    <select class="form-select" name="type">
+                                        <option value="general">General</option>
+                                        <option value="song" selected>Song</option>
+                                        <option value="artist">Artist</option>
+                                        <option value="album">Album</option>
+                                    </select>
+                                </div>
+                                <div class="mb-2">
+                                    <input type="text" name="query" class="form-control"
+                                        placeholder="Artist, song, album..." required>
+                                </div>
+                                <button class="btn btn-success w-100" type="submit">Search Music</button>
+                            </form>
                         </div>
-                        <button class="btn btn-success w-100" type="submit">Search Music</button>
-                    </form>
+                    </div>
                 </div>
-            </div>
-        </div>
 
-        <!-- Proxy ScraperCard -->
-        <div class="col-12 col-lg-6">
-            <div class="card h-100">
-                <div class="card-header">
-                    <h4>🔗 Proxy Scraper</h4>
+                <!-- Proxy ScraperCard -->
+                <div class="col-12 col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h4>🔗 Proxy Scraper</h4>
+                        </div>
+                        <div class="card-body d-flex flex-column justify-content-center">
+                            <form id="proxy-form" class="w-100">
+                                <button class="btn btn-info w-100" type="submit">Update Proxies</button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body d-flex flex-column justify-content-center">
-                    <form id="proxy-form" class="w-100">
-                        <button class="btn btn-info w-100" type="submit">Update Proxies</button>
-                    </form>
-                </div>
-            </div>
-        </div>
             </div>
 
             <!-- Results Area -->
@@ -128,33 +141,33 @@
     // Prefer the global search history provided by base.html
     const searchHistoryDiv = document.getElementById('search-history') || historyContent;
 
-    lyricsForm.addEventListener('submit', function(e) {
+    lyricsForm.addEventListener('submit', function (e) {
         e.preventDefault();
         const formData = new FormData(this);
         handleFormSubmit('/search_lyrics', formData);
     });
 
-    simpmusicForm.addEventListener('submit', function(e) {
+    simpmusicForm.addEventListener('submit', function (e) {
         e.preventDefault();
         const formData = new FormData(this);
         handleFormSubmit('/search_simpmusic', formData);
     });
 
-    mediumForm.addEventListener('submit', function(e) {
+    mediumForm.addEventListener('submit', function (e) {
         e.preventDefault();
         const formData = new FormData(this);
         handleFormSubmit('/scrape_medium', formData);
     });
 
     if (freediumForm) {
-        freediumForm.addEventListener('submit', function(e) {
+        freediumForm.addEventListener('submit', function (e) {
             e.preventDefault();
             const formData = new FormData(this);
             handleFormSubmit('/scrape_freedium', formData);
         });
     }
 
-    proxyForm.addEventListener('submit', function(e) {
+    proxyForm.addEventListener('submit', function (e) {
         e.preventDefault();
         const formData = new FormData(this); // No form data needed for proxy update, but keep for consistency
         handleFormSubmit('/update_proxies', formData);
@@ -178,27 +191,27 @@
             method: 'POST',
             body: formData,
         })
-        .then(response => response.json())
-        .then(data => {
-            // 3. Handle the initial response
-            if (data.status === 'SUCCESS') {
-                // Result was in cache, display it immediately
-                resultsArea.innerHTML = extractRelevantHtml(data.result);
-                // remove any duplicated sidebar/history that may have come with injected HTML
-                if (typeof sanitizeInjectedResults === 'function') sanitizeInjectedResults();
-                dedupeResultsHistory();
-            } else if (data.status === 'PENDING') {
-                // Job started, begin polling
-                pollJobStatus(data.task_id);
-            } else {
-                // Handle any other initial errors
-                resultsArea.innerHTML = `<div class="alert alert-danger">${data.error || 'An unknown error occurred.'}</div>`;
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            resultsArea.innerHTML = `<div class="alert alert-danger">Failed to submit the request. Please try again.</div>`;
-        });
+            .then(response => response.json())
+            .then(data => {
+                // 3. Handle the initial response
+                if (data.status === 'SUCCESS') {
+                    // Result was in cache, display it immediately
+                    resultsArea.innerHTML = extractRelevantHtml(data.result);
+                    // remove any duplicated sidebar/history that may have come with injected HTML
+                    if (typeof sanitizeInjectedResults === 'function') sanitizeInjectedResults();
+                    dedupeResultsHistory();
+                } else if (data.status === 'PENDING') {
+                    // Job started, begin polling
+                    pollJobStatus(data.task_id);
+                } else {
+                    // Handle any other initial errors
+                    resultsArea.innerHTML = `<div class="alert alert-danger">${data.error || 'An unknown error occurred.'}</div>`;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                resultsArea.innerHTML = `<div class="alert alert-danger">Failed to submit the request. Please try again.</div>`;
+            });
     }
 
     function pollJobStatus(jobId) {
@@ -226,8 +239,8 @@
     }
 
     // Extract the meaningful content from server-rendered full-page HTML responses
-    function extractRelevantHtml(html){
-        try{
+    function extractRelevantHtml(html) {
+        try {
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, 'text/html');
             // Prefer the content column used by base.html
@@ -237,13 +250,13 @@
             const firstCard = doc.querySelector('.card');
             if (firstCard) return firstCard.outerHTML;
             return doc.body.innerHTML;
-        }catch(e){
+        } catch (e) {
             return html;
         }
     }
 
     // Move any `.history` blocks from results into the dedicated history panel
-    function dedupeResultsHistory(){
+    function dedupeResultsHistory() {
         if (!resultsArea) return;
         const histEls = resultsArea.querySelectorAll('.history');
         histEls.forEach(el => {
@@ -252,14 +265,14 @@
             const replayUrl = el.getAttribute('data-replay-url') || el.dataset.replayUrl || '';
             // Attempt to extract a friendly query/title from the element
             let queryText = (el.getAttribute('data-history-query') || el.dataset.historyQuery || '').trim();
-            if (!queryText){
+            if (!queryText) {
                 const titleEl = el.querySelector('.history-title') || el.querySelector('h5') || el.querySelector('strong');
-                queryText = titleEl ? titleEl.innerText.trim() : (el.innerText || '').trim().slice(0,60);
+                queryText = titleEl ? titleEl.innerText.trim() : (el.innerText || '').trim().slice(0, 60);
             }
 
             // If an entry with same task-id or same query already exists in the global search history, skip
             let exists = false;
-            if (searchHistoryDiv){
+            if (searchHistoryDiv) {
                 if (taskId && searchHistoryDiv.querySelector(`[data-task-id="${taskId}"]`)) exists = true;
                 if (!exists && queryText && searchHistoryDiv.querySelector(`[data-history-query="${CSS.escape(queryText)}"]`)) exists = true;
             }
@@ -270,7 +283,7 @@
 
             // Create a standardized list-group button so entries match base.html
             const btn = document.createElement('button');
-            btn.setAttribute('type','button');
+            btn.setAttribute('type', 'button');
             btn.className = 'list-group-item list-group-item-action text-start py-2';
             if (taskId) btn.setAttribute('data-task-id', taskId);
             if (replayUrl) btn.setAttribute('data-replay-url', replayUrl);
@@ -278,17 +291,17 @@
 
             // build inner structure similar to base.html list-group items
             const timeSmall = el.querySelector('.history-time') ? el.querySelector('.history-time').innerText : '';
-            const displayText = queryText.length > 45 ? queryText.slice(0,45) + '...' : queryText;
+            const displayText = queryText.length > 45 ? queryText.slice(0, 45) + '...' : queryText;
             btn.innerHTML = `<div class="d-flex justify-content-between align-items-center"><small>${displayText}</small><small class="text-muted">${timeSmall}</small></div>`;
 
             // Insert into searchHistoryDiv or fallback
-            if (searchHistoryDiv){
-                if (searchHistoryDiv.children.length === 1 && searchHistoryDiv.querySelector('.text-muted')){
+            if (searchHistoryDiv) {
+                if (searchHistoryDiv.children.length === 1 && searchHistoryDiv.querySelector('.text-muted')) {
                     searchHistoryDiv.innerHTML = '';
                 }
                 // prepend to show newest first
                 searchHistoryDiv.prepend(btn);
-            } else if (historyContent){
+            } else if (historyContent) {
                 historyContent.prepend(btn);
             }
 
@@ -299,7 +312,7 @@
     }
 
     // Remove any nested sidebar or search-history that came embedded in server-rendered HTML
-    function sanitizeInjectedResults(){
+    function sanitizeInjectedResults() {
         if (!resultsArea) return;
         // Remove any nested search history containers inside results area
         const nestedIds = ['search-history'];
@@ -312,28 +325,28 @@
     }
 
     // Click handler: when a history item (or its title) is clicked, attempt to load the saved result
-    function handleHistoryClick(e){
+    function handleHistoryClick(e) {
         const el = e.target.closest('.history-item');
         if (!el) return;
 
         // If the history item has an embedded payload template, use it
         const payload = el.querySelector('.history-payload');
-        if (payload){
+        if (payload) {
             resultsArea.innerHTML = payload.innerHTML;
             return;
         }
 
         // If there's a task id, call status endpoint and fetch final result
         const taskId = el.getAttribute('data-task-id') || el.dataset.taskId;
-        if (taskId){
+        if (taskId) {
             resultsArea.innerHTML = `<div class="card"><div class="card-body text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div><p class="mt-2">Loading history item...</p></div></div>`;
             // fetch latest status/result
             fetch(`/status/${taskId}`)
                 .then(r => r.json())
                 .then(data => {
-                    if (data.state === 'SUCCESS' || data.status === 'SUCCESS'){
+                    if (data.state === 'SUCCESS' || data.status === 'SUCCESS') {
                         resultsArea.innerHTML = data.result || data.html || '';
-                    } else if (data.state === 'PENDING' || data.status === 'PENDING'){
+                    } else if (data.state === 'PENDING' || data.status === 'PENDING') {
                         // if still pending, show message and start polling
                         resultsArea.innerHTML = `<div class="alert alert-info">Result is pending. Polling...</div>`;
                         pollJobStatus(taskId);
@@ -349,7 +362,7 @@
 
         // If there's a replay URL, fetch it directly
         const replayUrl = el.getAttribute('data-replay-url') || el.dataset.replayUrl;
-        if (replayUrl){
+        if (replayUrl) {
             resultsArea.innerHTML = `<div class="card"><div class="card-body text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div><p class="mt-2">Loading history item...</p></div></div>`;
             fetch(replayUrl)
                 .then(r => r.text())
@@ -360,7 +373,7 @@
 
         // Fallback: if the history item contains a link, follow it and load the content
         const anchor = el.querySelector('a[href]');
-        if (anchor){
+        if (anchor) {
             const href = anchor.getAttribute('href');
             resultsArea.innerHTML = `<div class="card"><div class="card-body text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div><p class="mt-2">Loading history item...</p></div></div>`;
             fetch(href)
@@ -378,7 +391,7 @@
     (searchHistoryDiv || historyContent)?.addEventListener('click', handleHistoryClick);
 
     // This makes the dynamically added "Copy" and "Download" buttons work
-    document.addEventListener('click', function(e) {
+    document.addEventListener('click', function (e) {
         if (e.target && e.target.id === 'copy-lyrics-btn') {
             const lyricsText = document.getElementById('lyrics-text').innerText;
             navigator.clipboard.writeText(lyricsText).then(() => {

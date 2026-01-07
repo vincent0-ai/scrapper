@@ -3,7 +3,9 @@ import io
 import os
 import redis
 from rq import Queue
-from db import db_manager # Assuming db_manager is correctly implemented and handles data storage/retrieval
+from db import db_manager
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from werkzeug.security import generate_password_hash, check_password_hash
 from worker import (
     scrape_lyrics,
     scrape_medium as worker_scrape_medium,
@@ -13,6 +15,31 @@ from worker import (
 )
 
 app = Flask(__name__)
+app.secret_key = os.getenv('SECRET_KEY', 'supersecretkey') # Change this in production!
+
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+
+class User(UserMixin):
+    def __init__(self, user_id, username):
+        self.id = str(user_id)
+        self.username = username
+
+    @staticmethod
+    def get(user_id):
+        user_data = db_manager.get_user_by_id(user_id)
+        if user_data:
+            return User(user_data['_id'], user_data['username'])
+        return None
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.get(user_id)
+
+@app.context_processor
+def inject_user():
+    return dict(current_user=current_user)
 
 redis_url = os.getenv('REDIS_URL')
 conn = redis.from_url(redis_url)
@@ -20,7 +47,50 @@ q = Queue(connection=conn)
 
 @app.route('/')
 def index():
-    return render_template('index.html') # This now points to our new file
+    return render_template('index.html')
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        user_data = db_manager.get_user_by_username(username)
+        if user_data and check_password_hash(user_data['password'], password):
+            user = User(user_data['_id'], user_data['username'])
+            login_user(user)
+            return jsonify({"status": "SUCCESS", "redirect": "/"})
+        else:
+            return jsonify({"status": "FAILED", "message": "Invalid username or password"}), 401
+            
+    return render_template('login.html')
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        if not username or not password:
+             return jsonify({"status": "FAILED", "message": "Username and password required"}), 400
+             
+        if db_manager.get_user_by_username(username):
+             return jsonify({"status": "FAILED", "message": "Username already exists"}), 400
+             
+        hashed_pw = generate_password_hash(password)
+        if db_manager.create_user(username, hashed_pw):
+             return jsonify({"status": "SUCCESS", "redirect": "/login"})
+        else:
+             return jsonify({"status": "FAILED", "message": "Registration failed"}), 500
+
+    return render_template('register.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return os.getenv('LOGOUT_REDIRECT', '/') # Redirect to home or login
+
 
 @app.route('/search_lyrics', methods=['POST'])
 def search_lyrics():
@@ -29,7 +99,8 @@ def search_lyrics():
         return jsonify({"error": "Search query is required."}), 400
 
     # Add to search history (initial entry -- metadata/title may be added later once we have the scraped result)
-    db_manager.add_to_search_history('lyrics', query)
+    user_id = current_user.id if current_user.is_authenticated else None
+    db_manager.add_to_search_history('lyrics', query, user_id=user_id)
 
     # Try to get from DB first
     cached_result = db_manager.get_lyrics(query)
@@ -39,7 +110,7 @@ def search_lyrics():
         # If we have a cached title, add another history entry with metadata so UI shows the title immediately
         if isinstance(cached_result, dict) and cached_result.get('title'):
             try:
-                db_manager.add_to_search_history('lyrics', query, metadata={'title': cached_result.get('title')})
+                db_manager.add_to_search_history('lyrics', query, metadata={'title': cached_result.get('title')}, user_id=user_id)
             except Exception:
                 pass
 
@@ -52,12 +123,12 @@ def search_lyrics():
                     elif not isinstance(cached_result[key], str):
                         cached_result[key] = str(cached_result[key])
 
-        cached_result['is_favorite'] = db_manager.is_favorite(query)
+        cached_result['is_favorite'] = db_manager.is_favorite(query, user_id=user_id)
         return jsonify({"status": "SUCCESS", "result": render_template('lyrics_result.html', result=cached_result)})
 
     # If not in DB, start a background job
     # Enqueue the actual worker function, not the Flask route handler
-    job = q.enqueue(scrape_lyrics, query, job_timeout=3600, meta={'template_name': 'lyrics_result.html'})
+    job = q.enqueue(scrape_lyrics, query, job_timeout=3600, meta={'template_name': 'lyrics_result.html', 'user_id': user_id})
     return jsonify({"status": "PENDING", "task_id": job.get_id()})
 
 @app.route('/search_simpmusic', methods=['POST'])
@@ -77,7 +148,8 @@ def scrape_medium():
         return jsonify({"error": "Medium URL is required."}), 400
 
     # Add to search history (initial entry)
-    db_manager.add_to_search_history('medium', url)
+    user_id = current_user.id if current_user.is_authenticated else None
+    db_manager.add_to_search_history('medium', url, user_id=user_id)
 
     # Try to get from DB first
     cached_result = db_manager.get_article(url)
@@ -86,14 +158,14 @@ def scrape_medium():
         # Add a follow-up history entry with explicit title metadata so the history shows the article title immediately
         if cached_result.get('title'):
             try:
-                db_manager.add_to_search_history('medium', url, metadata={'title': cached_result.get('title')})
+                db_manager.add_to_search_history('medium', url, metadata={'title': cached_result.get('title')}, user_id=user_id)
             except Exception:
                 pass
-        cached_result['is_favorite'] = db_manager.is_favorite(url)
+        cached_result['is_favorite'] = db_manager.is_favorite(url, user_id=user_id)
         return jsonify({"status": "SUCCESS", "result": render_template('medium_result.html', article=cached_result)})
 
     # If not in DB, start a background job
-    job = q.enqueue(worker_scrape_medium, url, job_timeout=3600, meta={'template_name': 'medium_result.html'})
+    job = q.enqueue(worker_scrape_medium, url, job_timeout=3600, meta={'template_name': 'medium_result.html', 'user_id': user_id})
     return jsonify({"status": "PENDING", "task_id": job.get_id()})
 
 
@@ -138,12 +210,24 @@ def job_status(job_id):
             if result and not result.get("error"):
                 template_name = job.meta.get('template_name', 'lyrics_result.html')
                 if template_name == 'lyrics_result.html':
-                    result['is_favorite'] = db_manager.is_favorite(result.get('query', ''))
+                    user_id = job.meta.get('user_id')
+                    try:
+                        # If user is different or not available, maybe we should be careful?
+                        # But this is an AJAX polling request, current_user should be available contextually if session cookie is present
+                        # However, RQ job runs in background, so 'current_user' is not available there. 
+                        # We use the user_id passed in meta to check is_favorite status potentially?
+                        # Actually, 'current_user' is available in THIS request (job_status).
+                        # So we should use current_user.id from the request context.
+                        req_user_id = current_user.id if current_user.is_authenticated else None
+                        result['is_favorite'] = db_manager.is_favorite(result.get('query', ''), user_id=req_user_id)
+                    except:
+                        pass
                     html = render_template(template_name, result=result)
                 elif template_name == 'proxy_result.html':
                     html = f'<div class="alert alert-success">{result.get("message", "Proxies updated!")}</div>'
                 else:
-                    result['is_favorite'] = db_manager.is_favorite(result.get('url', ''))
+                    req_user_id = current_user.id if current_user.is_authenticated else None
+                    result['is_favorite'] = db_manager.is_favorite(result.get('url', ''), user_id=req_user_id)
                     html = render_template(template_name, article=result)
                 response = {'state': 'SUCCESS', 'result': html}
             elif result and result.get("error"):
@@ -230,7 +314,8 @@ URL
 @app.route('/search_history')
 def get_search_history():
     search_type = request.args.get('type')  # Optional: filter by type (lyrics, medium, simpmusic)
-    history = db_manager.get_search_history(search_type)
+    user_id = current_user.id if current_user.is_authenticated else None
+    history = db_manager.get_search_history(search_type, user_id=user_id)
 
     # Clean up for JSON serialization and compute a friendly display title
     for item in history:
@@ -269,12 +354,14 @@ def get_search_history():
     return jsonify({"status": "SUCCESS", "history": history})
 
 @app.route('/clear_search_history', methods=['POST'])
+@login_required
 def clear_search_history():
     search_type = request.form.get('type')  # Optional: clear only specific type
-    db_manager.clear_search_history(search_type)
+    db_manager.clear_search_history(search_type, user_id=current_user.id)
     return jsonify({"status": "SUCCESS", "message": "Search history cleared"})
 
 @app.route('/add_favorite', methods=['POST'])
+@login_required
 def add_favorite():
     item_type = request.form.get('type')  # 'lyrics' or 'medium'
     item_id = request.form.get('item_id')  # query or url
@@ -283,23 +370,25 @@ def add_favorite():
     if not item_type or not item_id or not title:
         return jsonify({"error": "Missing required fields"}), 400
     
-    db_manager.add_to_favorites(item_type, item_id, title)
+    db_manager.add_to_favorites(item_type, item_id, title, user_id=current_user.id)
     return jsonify({"status": "SUCCESS", "message": "Added to favorites"})
 
 @app.route('/remove_favorite', methods=['POST'])
+@login_required
 def remove_favorite():
     item_id = request.form.get('item_id')
     
     if not item_id:
         return jsonify({"error": "item_id is required"}), 400
     
-    db_manager.remove_from_favorites(item_id)
+    db_manager.remove_from_favorites(item_id, user_id=current_user.id)
     return jsonify({"status": "SUCCESS", "message": "Removed from favorites"})
 
 @app.route('/favorites')
 def get_favorites():
     item_type = request.args.get('type')  # Optional: filter by type
-    favorites = db_manager.get_favorites(item_type)
+    user_id = current_user.id if current_user.is_authenticated else None
+    favorites = db_manager.get_favorites(item_type, user_id=user_id)
     # Clean up for JSON serialization
     for item in favorites:
         item.pop('_id', None)
