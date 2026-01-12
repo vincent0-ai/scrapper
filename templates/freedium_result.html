@@ -3,62 +3,202 @@
 {% block title %}Scraped Freedium Article: {{ article.title }}{% endblock %}
 
 {% block content %}
-<div class="card">
-    <div class="card-header">
-        <div class="d-flex flex-column gap-2">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<style>
+    .article-content {
+        font-family: 'Georgia', 'Cambria', 'Times New Roman', serif;
+        line-height: 1.8;
+        font-size: 1.15rem;
+        color: #24292f;
+        max-width: 800px;
+        /* Optimal reading width */
+        margin: 0 auto;
+        padding: 0 1rem;
+    }
+
+    .article-content h1,
+    .article-content h2,
+    .article-content h3,
+    .article-content h4 {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        color: #1f2328;
+        margin-top: 1.5em;
+        margin-bottom: 0.75em;
+        font-weight: 600;
+    }
+
+    .article-content h1 {
+        font-size: 2em;
+        border-bottom: 1px solid #eaecef;
+        padding-bottom: 0.3em;
+    }
+
+    .article-content h2 {
+        font-size: 1.5em;
+        border-bottom: 1px solid #eaecef;
+        padding-bottom: 0.3em;
+    }
+
+    .article-content p {
+        margin-bottom: 1.25em;
+    }
+
+    .article-content a {
+        color: #0969da;
+        text-decoration: none;
+    }
+
+    .article-content a:hover {
+        text-decoration: underline;
+    }
+
+    .article-content img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 6px;
+        margin: 1.5rem auto;
+        display: block;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .article-content pre {
+        background-color: #f6f8fa;
+        border-radius: 6px;
+        padding: 16px;
+        overflow-x: auto;
+        font-size: 0.9em;
+        line-height: 1.45;
+        margin-top: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .article-content code {
+        font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace;
+        background-color: rgba(175, 184, 193, 0.2);
+        padding: 0.2em 0.4em;
+        border-radius: 6px;
+        font-size: 85%;
+    }
+
+    .article-content pre code {
+        background-color: transparent;
+        padding: 0;
+        font-size: 100%;
+        color: inherit;
+    }
+
+    .article-content blockquote {
+        margin: 1.5rem 0;
+        padding-left: 1rem;
+        border-left: 4px solid #d0d7de;
+        color: #57606a;
+    }
+
+    .article-content ul,
+    .article-content ol {
+        padding-left: 2em;
+        margin-bottom: 1.5em;
+    }
+
+    .article-content li {
+        margin-bottom: 0.5em;
+    }
+</style>
+
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+        <div class="d-flex flex-column gap-2 mx-auto" style="max-width: 800px;">
             <div>
-                <h3 class="mb-2 text-break">{{ article.title }}</h3>
-                <p class="text-muted mb-1">✍️ By: {{ article.author }}</p>
-                <p class="mb-2 text-break">🔗 <a href="{{ article.url }}" target="_blank" rel="noopener noreferrer" class="text-break d-inline-block" style="max-width:100%; word-break:break-word; overflow-wrap:break-word;">{{ article.url }}</a></p>
-            </div>
-            <div class="d-flex gap-2 flex-wrap">
-                <button class="btn btn-sm btn-primary copy-freedium-btn" data-title="{{ article.title }}">📋 Copy</button>
-                <form method="POST" action="/download_medium" style="display: inline;">
-                    <input type="hidden" name="title" value="{{ article.title }}">
-                    <input type="hidden" name="author" value="{{ article.author }}">
-                    <input type="hidden" name="content" value="{{ article.content }}">
-                    <input type="hidden" name="url" value="{{ article.url }}">
-                    <button type="submit" class="btn btn-sm btn-success">⬇️ Download</button>
-                </form>
-                <button class="btn btn-sm btn-outline-warning favorite-btn" 
-                        data-type="freedium" 
-                        data-item-id="{{ article.url }}" 
-                        data-title="{{ article.title }}"
+                <h1 class="mb-3 text-break fw-bold"
+                    style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">{{
+                    article.title }}</h1>
+                <div class="d-flex align-items-center text-muted mb-3 flex-wrap gap-3">
+                    <span>✍️ {{ article.author }}</span>
+                    {% if article.published %}<span>📅 {{ article.published }}</span>{% endif %}
+                </div>
+                <!-- Controls -->
+                <div class="d-flex gap-2 flex-wrap mb-3">
+                    <button class="btn btn-sm btn-outline-primary copy-btn" data-clipboard-target="#raw-markdown">📋
+                        Copy Markdown</button>
+                    <form method="POST" action="/download_medium" style="display: inline;">
+                        <input type="hidden" name="title" value="{{ article.title }}">
+                        <input type="hidden" name="author" value="{{ article.author }}">
+                        <input type="hidden" name="content" value="{{ article.content }}">
+                        <input type="hidden" name="url" value="{{ article.url }}">
+                        <button type="submit" class="btn btn-sm btn-outline-success">⬇️ Download</button>
+                    </form>
+                    <button class="btn btn-sm btn-outline-warning favorite-btn" data-type="freedium"
+                        data-item-id="{{ article.url }}" data-title="{{ article.title }}"
                         style="{% if article.is_favorite %}display: none;{% endif %}">
-                    ☆ Favorite
-                </button>
-                <button class="btn btn-sm btn-warning favorite-btn-remove" 
-                        data-type="freedium" 
+                        ☆ Favorite
+                    </button>
+                    <button class="btn btn-sm btn-warning favorite-btn-remove" data-type="freedium"
                         data-item-id="{{ article.url }}"
                         style="{% if not article.is_favorite %}display: none;{% endif %}">
-                    ★ Favorited
-                </button>
+                        ★ Favorited
+                    </button>
+                </div>
+                <hr class="text-muted opacity-25">
             </div>
         </div>
     </div>
-    <div class="card-body" id="freedium-content">
-        <pre style="white-space: pre-wrap; word-wrap: break-word; font-family: inherit; font-size: inherit;">{{ article.content }}</pre>
+    <div class="card-body">
+        <!-- Hidden raw markdown for processing -->
+        <div id="raw-markdown" style="display: none;">{{ article.content }}</div>
+        <!-- Rendered content container -->
+        <div id="rendered-content" class="article-content">
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Rendering...</span>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const copyBtn = document.querySelector('.copy-freedium-btn');
+    document.addEventListener('DOMContentLoaded', function () {
+        const rawMarkdown = document.getElementById('raw-markdown').textContent;
+        const renderedContainer = document.getElementById('rendered-content');
+
+        // Configure marked
+        marked.setOptions({
+            breaks: true, // Enable GFM line breaks
+            gfm: true,
+            highlight: function (code, lang) {
+                const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+                return hljs.highlight(code, { language }).value;
+            },
+            langPrefix: 'hljs language-'
+        });
+
+        try {
+            // Render markdown
+            renderedContainer.innerHTML = marked.parse(rawMarkdown);
+            // Apply highlighting again to ensure it catches everything
+            hljs.highlightAll();
+        } catch (e) {
+            console.error("Markdown rendering failed:", e);
+            renderedContainer.innerHTML = '<div class="alert alert-danger">Failed to render article content.</div><pre>' + rawMarkdown + '</pre>';
+        }
+
+        // Copy button logic
+        const copyBtn = document.querySelector('.copy-btn');
         if (copyBtn) {
-            copyBtn.addEventListener('click', function() {
-                const content = document.getElementById('freedium-content').innerText;
-                navigator.clipboard.writeText(content).then(() => {
-                    const originalText = copyBtn.innerText;
-                    copyBtn.innerText = '✓ Copied!';
-                    copyBtn.classList.remove('btn-primary');
+            copyBtn.addEventListener('click', function () {
+                navigator.clipboard.writeText(rawMarkdown).then(() => {
+                    const originalText = copyBtn.innerHTML;
+                    copyBtn.innerHTML = '✓ Copied!';
+                    copyBtn.classList.remove('btn-outline-primary');
                     copyBtn.classList.add('btn-success');
                     setTimeout(() => {
-                        copyBtn.innerText = originalText;
+                        copyBtn.innerHTML = originalText;
                         copyBtn.classList.remove('btn-success');
-                        copyBtn.classList.add('btn-primary');
+                        copyBtn.classList.add('btn-outline-primary');
                     }, 2000);
-                }).catch(err => {
-                    alert('Failed to copy to clipboard');
                 });
             });
         }

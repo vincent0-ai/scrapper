@@ -92,42 +92,31 @@ class MediumScraper:
         article_body = soup.find("section", attrs={"data-field": "body"})
         target = article_body if article_body else soup
         
-        tags_to_extract = ["p", "pre", "h1", "h2", "h3", "h4", "h5", "h6", "blockquote", "ul", "ol"]
-        elements = target.find_all(tags_to_extract)
-        
-        # Filter out nested elements (e.g. p inside blockquote, or li inside ul)
-        unique_elements = []
-        for el in elements:
-            if not any(parent in elements for parent in el.parents):
-                unique_elements.append(el)
-        
-        content_parts = []
-        for el in unique_elements:
-            text = el.get_text(strip=True)
-            if not text:
-                continue
-                
-            if el.name == 'pre':
-                content_parts.append(f"```\n{text}\n```")
-            elif el.name in ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']:
-                # Simple header formatting
-                content_parts.append(f"## {text}") 
-            elif el.name == 'blockquote':
-                content_parts.append(f"> {text}")
-            elif el.name in ['ul', 'ol']:
-                # Handle lists specifically to keep them somewhat formatted
-                items = [li.get_text(strip=True) for li in el.find_all('li')]
-                list_text = "\n".join(f"- {item}" for item in items)
-                content_parts.append(list_text)     
-            else:
-                content_parts.append(text)
+        from markdownify import markdownify
+        # distinct from freedium, medium often has specific classes we might want to clean, 
+        # but markdownify handles most structure well.
+        content = markdownify(str(target), heading_style="ATX", code_language="python")
 
-        content = "\n\n".join(content_parts)
-
-        # Clean the scraped content to remove UI text, tags and excess whitespace
-        content = clean_recon_article(content) if content else content
+        # Basic cleaning of the markdown content
+        # We don't want to strip all tags because markdown might still have some or use <> for URLs
+        # But we do want to remove the specific UI noise.
         
-        return {"title": title_text, "author": author_text, "published": publish_text, "tags": tags, "content": content}
+        ui_elements = [
+            r"Sign up\s+Sign in", 
+            r"Top highlight", 
+            r"Listen\s+Share",
+            r"Write a response.*", # End of article sections
+            r"Help\s+Status\s+About.*",
+            r"Reply\s+\d+\s+reply"
+        ]
+        import re
+        for pattern in ui_elements:
+            content = re.sub(pattern, '', content, flags=re.DOTALL | re.IGNORECASE)
+
+        # Clean up excessive newlines
+        content = re.sub(r'\n{3,}', '\n\n', content)
+        
+        return {"title": title_text, "author": author_text, "published": publish_text, "tags": tags, "content": content.strip()}
 
     def scrape_single(self, url: str) -> Dict:
         # Check DB first

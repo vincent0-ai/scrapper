@@ -7,10 +7,10 @@ redis # For message broker
 rq # For background tasks
 python-dotenv
 honcho
-
-# Note: This project now requires a running Redis server.
-# You can install it with:
 Flask-Login
 werkzeug
+markdownify
+# Note: This project now requires a running Redis server.
+# You can install it with:
 # sudo apt-get install redis-server (for Debian/Ubuntu)
 # or follow instructions at https://redis.io/docs/getting-started/installation/

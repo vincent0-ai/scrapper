@@ -39,11 +39,14 @@ class FreediumScraper:
 
         # Content: prefer <article> or common post container classes
         content_container = soup.find("div", class_="mt-8 main-content")
+        
         if content_container:
-            paragraphs = content_container.find_all(["p", "h2", "h3", "li"])  # include headings and list items
-            content = "\n\n".join(p.get_text(strip=True) for p in paragraphs if p.get_text(strip=True))
+            # Convert HTML to Markdown
+            from markdownify import markdownify
+            # Configure markdownify to handle code blocks and other elements nicely
+            content = markdownify(str(content_container), heading_style="ATX", code_language="python")
         else:
-            # fallback to all paragraphs
+            # fallback to all paragraphs if main container not found (though less likely on Freedium)
             content = "\n\n".join(p.get_text(strip=True) for p in soup.find_all("p"))
 
         return {"title": title, "author": author, "content": content}
