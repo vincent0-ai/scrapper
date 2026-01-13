@@ -247,7 +247,6 @@
           if (resultsArea) resultsArea.innerHTML = `<div class="alert alert-danger">Failed to retrieve saved content.</div>`;
         });
     }
-
     function loadFavorites() {
       fetch('/favorites')
         .then(response => response.json())
