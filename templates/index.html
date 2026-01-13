@@ -200,6 +200,8 @@
                     // remove any duplicated sidebar/history that may have come with injected HTML
                     if (typeof sanitizeInjectedResults === 'function') sanitizeInjectedResults();
                     dedupeResultsHistory();
+                    // Initialize markdown rendering for article content
+                    if (typeof initMarkdownRendering === 'function') initMarkdownRendering();
                 } else if (data.status === 'PENDING') {
                     // Job started, begin polling
                     pollJobStatus(data.task_id);
@@ -224,6 +226,8 @@
                         resultsArea.innerHTML = extractRelevantHtml(data.result);
                         if (typeof sanitizeInjectedResults === 'function') sanitizeInjectedResults();
                         dedupeResultsHistory();
+                        // Initialize markdown rendering for article content
+                        if (typeof initMarkdownRendering === 'function') initMarkdownRendering();
                     } else if (data.state === 'FAILED') {
                         clearInterval(interval);
                         resultsArea.innerHTML = `<div class="alert alert-danger">${data.status || 'The job failed.'}</div>`;

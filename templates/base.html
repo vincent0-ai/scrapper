@@ -1,144 +1,152 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
-    <meta name="theme-color" content="#212529">
-    <meta name="description" content="Web Scraper Dashboard - Scrape lyrics, Medium articles, and more">
-    <title>{% block title %}Scraper Dashboard{% endblock %}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <style>
-      /* Prevent double tap zoom on mobile */
-      button, a, input, select, textarea {
-        touch-action: manipulation;
-      }
-      
-      /* Better scrolling on iOS */
-      body {
-        -webkit-font-smoothing: antialiased;
-        -webkit-tap-highlight-color: transparent;
-      }
-    </style>
-  </head>
-  <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-      <div class="container-fluid">
-        <a class="navbar-brand" href="/">Scraper Dashboard</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-          <ul class="navbar-nav ms-auto">
-            <li class="nav-item">
-              <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#favoritesModal">⭐ Favorites</a>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </nav>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
+  <meta name="theme-color" content="#212529">
+  <meta name="description" content="Web Scraper Dashboard - Scrape lyrics, Medium articles, and more">
+  <title>{% block title %}Scraper Dashboard{% endblock %}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    /* Prevent double tap zoom on mobile */
+    button,
+    a,
+    input,
+    select,
+    textarea {
+      touch-action: manipulation;
+    }
+
+    /* Better scrolling on iOS */
+    body {
+      -webkit-font-smoothing: antialiased;
+      -webkit-tap-highlight-color: transparent;
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container-fluid">
-      <div class="row">
-        <!-- Sidebar with Search History (fixed width) -->
-        <!-- Hidden on small screens; mobile uses the offcanvas button instead -->
-        <div class="sidebar-fixed bg-light p-3 d-none d-lg-block" style="min-height: 100vh; border-right: 1px solid #ddd;">
-          <div class="sidebar-content">
-            <h5 class="mb-2">📋 Search History</h5>
-            <div id="search-history" class="mt-2">
-              <p class="text-muted small">No searches yet</p>
-            </div>
-            <button class="btn btn-sm btn-outline-danger mt-2 w-100" id="clear-history-btn">Clear History</button>
+      <a class="navbar-brand" href="/">Scraper Dashboard</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#favoritesModal">⭐ Favorites</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+  <div class="container-fluid">
+    <div class="row">
+      <!-- Sidebar with Search History (fixed width) -->
+      <!-- Hidden on small screens; mobile uses the offcanvas button instead -->
+      <div class="sidebar-fixed bg-light p-3 d-none d-lg-block"
+        style="min-height: 100vh; border-right: 1px solid #ddd;">
+        <div class="sidebar-content">
+          <h5 class="mb-2">📋 Search History</h5>
+          <div id="search-history" class="mt-2">
+            <p class="text-muted small">No searches yet</p>
           </div>
+          <button class="btn btn-sm btn-outline-danger mt-2 w-100" id="clear-history-btn">Clear History</button>
         </div>
-        <!-- Main Content (flexible) -->
-        <div class="main-fluid p-3">
-          {% block content %}{% endblock %}
-        </div>
+      </div>
+      <!-- Main Content (flexible) -->
+      <div class="main-fluid p-3">
+        {% block content %}{% endblock %}
       </div>
     </div>
+  </div>
 
-    <!-- Small-screen history button in navbar -->
-    <button class="btn btn-sm btn-outline-secondary d-lg-none position-fixed" style="right:18px;bottom:18px;z-index:1200;" data-bs-toggle="offcanvas" data-bs-target="#historyOffcanvas" aria-controls="historyOffcanvas">History</button>
+  <!-- Small-screen history button in navbar -->
+  <button class="btn btn-sm btn-outline-secondary d-lg-none position-fixed" style="right:18px;bottom:18px;z-index:1200;"
+    data-bs-toggle="offcanvas" data-bs-target="#historyOffcanvas" aria-controls="historyOffcanvas">History</button>
 
-    <!-- Offcanvas: Search History for Mobile -->
-    <div class="offcanvas offcanvas-start" tabindex="-1" id="historyOffcanvas" aria-labelledby="historyOffcanvasLabel">
-      <div class="offcanvas-header">
-        <h5 class="offcanvas-title" id="historyOffcanvasLabel">📋 Search History</h5>
-        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-      </div>
-      <div class="offcanvas-body">
-        <div id="search-history-mobile">
-          <p class="text-muted small">No searches yet</p>
-        </div>
-        <button class="btn btn-sm btn-outline-danger mt-3 w-100" id="clear-history-btn-mobile">Clear History</button>
-      </div>
+  <!-- Offcanvas: Search History for Mobile -->
+  <div class="offcanvas offcanvas-start" tabindex="-1" id="historyOffcanvas" aria-labelledby="historyOffcanvasLabel">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title" id="historyOffcanvasLabel">📋 Search History</h5>
+      <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
+    <div class="offcanvas-body">
+      <div id="search-history-mobile">
+        <p class="text-muted small">No searches yet</p>
+      </div>
+      <button class="btn btn-sm btn-outline-danger mt-3 w-100" id="clear-history-btn-mobile">Clear History</button>
+    </div>
+  </div>
 
-    <script>
-      // Clear mobile history button wiring
-      document.addEventListener('click', function(e){
-        if (e.target && e.target.id === 'clear-history-btn-mobile'){
-          if (confirm('Clear all search history?')){
-            fetch('/clear_search_history', { method: 'POST' })
-              .then(r => r.json()).then(()=>{ loadSearchHistory(); });
-          }
+  <script>
+    // Clear mobile history button wiring
+    document.addEventListener('click', function (e) {
+      if (e.target && e.target.id === 'clear-history-btn-mobile') {
+        if (confirm('Clear all search history?')) {
+          fetch('/clear_search_history', { method: 'POST' })
+            .then(r => r.json()).then(() => { loadSearchHistory(); });
         }
-      });
-    </script>
+      }
+    });
+  </script>
 
-    <!-- Favorites Modal -->
-    <div class="modal fade" id="favoritesModal" tabindex="-1">
-      <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">⭐ My Favorites</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body">
-            <div id="favorites-list">
-              <p class="text-muted">No favorites yet. Click the star icon on any result to add it!</p>
-            </div>
+  <!-- Favorites Modal -->
+  <div class="modal fade" id="favoritesModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">⭐ My Favorites</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div id="favorites-list">
+            <p class="text-muted">No favorites yet. Click the star icon on any result to add it!</p>
           </div>
         </div>
       </div>
     </div>
+  </div>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-      // Load search history on page load
-      document.addEventListener('DOMContentLoaded', function() {
-        loadSearchHistory();
-        loadFavorites();
-      });
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Load search history on page load
+    document.addEventListener('DOMContentLoaded', function () {
+      loadSearchHistory();
+      loadFavorites();
+    });
 
-      function loadSearchHistory() {
-        fetch('/search_history')
-          .then(response => response.json())
-          .then(data => {
-            const desktopDiv = document.getElementById('search-history');
-            const mobileDiv = document.getElementById('search-history-mobile');
-            const history = data.history || [];
-            
-            if (history.length === 0) {
-              if (desktopDiv) desktopDiv.innerHTML = '<p class="text-muted small">No searches yet</p>';
-              if (mobileDiv) mobileDiv.innerHTML = '<p class="text-muted small">No searches yet</p>';
-              return;
-            }
+    function loadSearchHistory() {
+      fetch('/search_history')
+        .then(response => response.json())
+        .then(data => {
+          const desktopDiv = document.getElementById('search-history');
+          const mobileDiv = document.getElementById('search-history-mobile');
+          const history = data.history || [];
 
-            let html = '<div class="list-group list-group-sm">';
-            const seen = new Set();
-            history.slice(0, 15).forEach(item => {
-              const key = `${item.type}|${item.query}`;
-              if (seen.has(key)) return; // skip duplicates, prefer newest
-              seen.add(key);
+          if (history.length === 0) {
+            if (desktopDiv) desktopDiv.innerHTML = '<p class="text-muted small">No searches yet</p>';
+            if (mobileDiv) mobileDiv.innerHTML = '<p class="text-muted small">No searches yet</p>';
+            return;
+          }
 
-              const time = new Date(item.timestamp);
-              const timeStr = time.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-              const rawDisplay = (item.display || item.query || '');
-              const displayText = rawDisplay.substring(0, 25) + (rawDisplay.length > 25 ? '...' : '');
-              const titleAttr = rawDisplay.replace(/"/g, '&quot;');
-              html += `
+          let html = '<div class="list-group list-group-sm">';
+          const seen = new Set();
+          history.slice(0, 15).forEach(item => {
+            const key = `${item.type}|${item.query}`;
+            if (seen.has(key)) return; // skip duplicates, prefer newest
+            seen.add(key);
+
+            const time = new Date(item.timestamp);
+            const timeStr = time.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+            const rawDisplay = (item.display || item.query || '');
+            const displayText = rawDisplay.substring(0, 25) + (rawDisplay.length > 25 ? '...' : '');
+            const titleAttr = rawDisplay.replace(/"/g, '&quot;');
+            html += `
                 <button class="list-group-item list-group-item-action text-start py-2" 
                         data-history-type="${item.type}" 
                         data-history-query="${item.query}"
@@ -149,55 +157,55 @@
                   </div>
                 </button>
               `;
-            });
-            html += '</div>';
-            if (desktopDiv) desktopDiv.innerHTML = html;
-            if (mobileDiv) mobileDiv.innerHTML = html;
+          });
+          html += '</div>';
+          if (desktopDiv) desktopDiv.innerHTML = html;
+          if (mobileDiv) mobileDiv.innerHTML = html;
 
-            // Add click handlers (delegated)
-            document.querySelectorAll('[data-history-type]').forEach(btn => {
-              btn.addEventListener('click', function() {
-                const type = this.dataset.historyType;
-                const query = this.dataset.historyQuery;
-                // If mobile offcanvas is open, close it
-                try{ const off = document.getElementById('historyOffcanvas'); if (off){ const bs = bootstrap.Offcanvas.getInstance(off) || new bootstrap.Offcanvas(off); bs.hide(); }}catch(e){}
-                repeatSearch(type, query);
-              });
+          // Add click handlers (delegated)
+          document.querySelectorAll('[data-history-type]').forEach(btn => {
+            btn.addEventListener('click', function () {
+              const type = this.dataset.historyType;
+              const query = this.dataset.historyQuery;
+              // If mobile offcanvas is open, close it
+              try { const off = document.getElementById('historyOffcanvas'); if (off) { const bs = bootstrap.Offcanvas.getInstance(off) || new bootstrap.Offcanvas(off); bs.hide(); } } catch (e) { }
+              repeatSearch(type, query);
             });
           });
+        });
+    }
+
+    function repeatSearch(type, query) {
+      // If the favorites modal is open, close it to reveal results
+      try {
+        const favEl = document.getElementById('favoritesModal');
+        if (favEl) {
+          const bs = bootstrap.Modal.getInstance(favEl) || new bootstrap.Modal(favEl);
+          bs.hide();
+        }
+      } catch (e) { /* ignore if bootstrap not available */ }
+      // Perform the same AJAX submission as index.js so we don't trigger a full page reload.
+      let form, input, url;
+      if (type === 'lyrics') {
+        form = document.getElementById('lyrics-form');
+        input = form.querySelector('input[name="query"]');
+        url = '/search_lyrics';
+      } else if (type === 'simpmusic') {
+        form = document.getElementById('simpmusic-form');
+        input = form.querySelector('input[name="query"]');
+        url = '/search_simpmusic';
+      } else if (type === 'medium') {
+        form = document.getElementById('medium-form');
+        input = form.querySelector('input[name="url"]');
+        url = '/scrape_medium';
       }
 
-      function repeatSearch(type, query) {
-        // If the favorites modal is open, close it to reveal results
-        try{
-          const favEl = document.getElementById('favoritesModal');
-          if (favEl){
-            const bs = bootstrap.Modal.getInstance(favEl) || new bootstrap.Modal(favEl);
-            bs.hide();
-          }
-        }catch(e){ /* ignore if bootstrap not available */ }
-        // Perform the same AJAX submission as index.js so we don't trigger a full page reload.
-        let form, input, url;
-        if (type === 'lyrics'){
-          form = document.getElementById('lyrics-form');
-          input = form.querySelector('input[name="query"]');
-          url = '/search_lyrics';
-        } else if (type === 'simpmusic'){
-          form = document.getElementById('simpmusic-form');
-          input = form.querySelector('input[name="query"]');
-          url = '/search_simpmusic';
-        } else if (type === 'medium'){
-          form = document.getElementById('medium-form');
-          input = form.querySelector('input[name="url"]');
-          url = '/scrape_medium';
-        }
+      if (!form || !input || !url) return;
+      input.value = query;
 
-        if (!form || !input || !url) return;
-        input.value = query;
-
-        const resultsArea = document.getElementById('results-area') || window.resultsArea;
-        if (resultsArea) {
-          resultsArea.innerHTML = `
+      const resultsArea = document.getElementById('results-area') || window.resultsArea;
+      if (resultsArea) {
+        resultsArea.innerHTML = `
             <div class="card">
                 <div class="card-body text-center">
                     <div class="spinner-border text-primary" role="status">
@@ -207,54 +215,56 @@
                 </div>
             </div>
           `;
-        }
-
-        const fd = new FormData(form);
-        fetch(url, { method: 'POST', body: fd })
-          .then(r => r.json())
-          .then(data => {
-            if (!resultsArea) return;
-            if (data.status === 'SUCCESS'){
-              // Use helper from index.js if available to extract relevant HTML
-              if (typeof extractRelevantHtml === 'function'){
-                resultsArea.innerHTML = extractRelevantHtml(data.result);
-              } else {
-                resultsArea.innerHTML = data.result;
-              }
-              // remove any duplicated sidebar injected with the content
-              try{ if (typeof sanitizeInjectedResults === 'function') sanitizeInjectedResults(); }catch(e){}
-              // call dedupe if available
-              if (typeof dedupeResultsHistory === 'function') dedupeResultsHistory();
-            } else if (data.status === 'PENDING'){
-              // Start polling using index's pollJobStatus if available
-              if (typeof pollJobStatus === 'function') pollJobStatus(data.task_id);
-              else resultsArea.innerHTML = `<div class="alert alert-info">Job queued. Refresh later to view result.</div>`;
-            } else {
-              resultsArea.innerHTML = `<div class="alert alert-danger">${data.error || 'Not found'}</div>`;
-            }
-          })
-          .catch(() => {
-            if (resultsArea) resultsArea.innerHTML = `<div class="alert alert-danger">Failed to retrieve saved content.</div>`;
-          });
       }
 
-      function loadFavorites() {
-        fetch('/favorites')
-          .then(response => response.json())
-          .then(data => {
-            const favsList = document.getElementById('favorites-list');
-            const favorites = data.favorites || [];
-            
-            if (favorites.length === 0) {
-              favsList.innerHTML = '<p class="text-muted">No favorites yet. Click the star icon on any result to add it!</p>';
-              return;
+      const fd = new FormData(form);
+      fetch(url, { method: 'POST', body: fd })
+        .then(r => r.json())
+        .then(data => {
+          if (!resultsArea) return;
+          if (data.status === 'SUCCESS') {
+            // Use helper from index.js if available to extract relevant HTML
+            if (typeof extractRelevantHtml === 'function') {
+              resultsArea.innerHTML = extractRelevantHtml(data.result);
+            } else {
+              resultsArea.innerHTML = data.result;
             }
+            // remove any duplicated sidebar injected with the content
+            try { if (typeof sanitizeInjectedResults === 'function') sanitizeInjectedResults(); } catch (e) { }
+            // call dedupe if available
+            if (typeof dedupeResultsHistory === 'function') dedupeResultsHistory();
+            // Initialize markdown rendering for article content
+            if (typeof initMarkdownRendering === 'function') initMarkdownRendering();
+          } else if (data.status === 'PENDING') {
+            // Start polling using index's pollJobStatus if available
+            if (typeof pollJobStatus === 'function') pollJobStatus(data.task_id);
+            else resultsArea.innerHTML = `<div class="alert alert-info">Job queued. Refresh later to view result.</div>`;
+          } else {
+            resultsArea.innerHTML = `<div class="alert alert-danger">${data.error || 'Not found'}</div>`;
+          }
+        })
+        .catch(() => {
+          if (resultsArea) resultsArea.innerHTML = `<div class="alert alert-danger">Failed to retrieve saved content.</div>`;
+        });
+    }
 
-            let html = '<div class="list-group">';
-            favorites.forEach(fav => {
-              const time = new Date(fav.timestamp);
-              const timeStr = time.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' });
-              html += `
+    function loadFavorites() {
+      fetch('/favorites')
+        .then(response => response.json())
+        .then(data => {
+          const favsList = document.getElementById('favorites-list');
+          const favorites = data.favorites || [];
+
+          if (favorites.length === 0) {
+            favsList.innerHTML = '<p class="text-muted">No favorites yet. Click the star icon on any result to add it!</p>';
+            return;
+          }
+
+          let html = '<div class="list-group">';
+          favorites.forEach(fav => {
+            const time = new Date(fav.timestamp);
+            const timeStr = time.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' });
+            html += `
                   <button class="list-group-item list-group-item-action text-start py-2 fav-open-btn" data-history-type="${fav.type}" data-history-query="${fav.item_id}" title="${fav.title}">
                     <div class="d-flex justify-content-between align-items-center">
                       <div>
@@ -265,63 +275,63 @@
                     </div>
                   </button>
                 `;
-            });
-            html += '</div>';
-            favsList.innerHTML = html;
+          });
+          html += '</div>';
+          favsList.innerHTML = html;
 
-            // Add remove handlers and open handlers for favorites
-            document.querySelectorAll('.remove-fav-btn').forEach(btn => {
-              btn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                const itemId = this.dataset.itemId;
-                removeFavorite(itemId);
-              });
-            });
-            document.querySelectorAll('.fav-open-btn').forEach(btn => {
-              btn.addEventListener('click', function() {
-                const type = this.dataset.historyType;
-                const query = this.dataset.historyQuery;
-                repeatSearch(type, query);
-              });
+          // Add remove handlers and open handlers for favorites
+          document.querySelectorAll('.remove-fav-btn').forEach(btn => {
+            btn.addEventListener('click', function (e) {
+              e.stopPropagation();
+              const itemId = this.dataset.itemId;
+              removeFavorite(itemId);
             });
           });
-      }
+          document.querySelectorAll('.fav-open-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+              const type = this.dataset.historyType;
+              const query = this.dataset.historyQuery;
+              repeatSearch(type, query);
+            });
+          });
+        });
+    }
 
-      function removeFavorite(itemId) {
-        fetch('/remove_favorite', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: `item_id=${encodeURIComponent(itemId)}`
-        })
+    function removeFavorite(itemId) {
+      fetch('/remove_favorite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `item_id=${encodeURIComponent(itemId)}`
+      })
         .then(response => response.json())
         .then(data => {
           loadFavorites();
         });
+    }
+
+    document.getElementById('clear-history-btn')?.addEventListener('click', function () {
+      if (confirm('Clear all search history?')) {
+        fetch('/clear_search_history', { method: 'POST' })
+          .then(response => response.json())
+          .then(data => {
+            loadSearchHistory();
+          });
       }
+    });
 
-      document.getElementById('clear-history-btn')?.addEventListener('click', function() {
-        if (confirm('Clear all search history?')) {
-          fetch('/clear_search_history', { method: 'POST' })
-            .then(response => response.json())
-            .then(data => {
-              loadSearchHistory();
-            });
-        }
-      });
+    // Handle favorite button clicks (dynamically added)
+    document.addEventListener('click', function (e) {
+      if (e.target.classList.contains('favorite-btn')) {
+        const btn = e.target;
+        const itemType = btn.dataset.type;
+        const itemId = btn.dataset.itemId;
+        const title = btn.dataset.title;
 
-      // Handle favorite button clicks (dynamically added)
-      document.addEventListener('click', function(e) {
-        if (e.target.classList.contains('favorite-btn')) {
-          const btn = e.target;
-          const itemType = btn.dataset.type;
-          const itemId = btn.dataset.itemId;
-          const title = btn.dataset.title;
-
-          fetch('/add_favorite', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: `type=${encodeURIComponent(itemType)}&item_id=${encodeURIComponent(itemId)}&title=${encodeURIComponent(title)}`
-          })
+        fetch('/add_favorite', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: `type=${encodeURIComponent(itemType)}&item_id=${encodeURIComponent(itemId)}&title=${encodeURIComponent(title)}`
+        })
           .then(response => response.json())
           .then(data => {
             btn.style.display = 'none';
@@ -331,17 +341,17 @@
             }
             loadFavorites();
           });
-        }
-        
-        if (e.target.classList.contains('favorite-btn-remove')) {
-          const btn = e.target;
-          const itemId = btn.dataset.itemId;
+      }
 
-          fetch('/remove_favorite', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: `item_id=${encodeURIComponent(itemId)}`
-          })
+      if (e.target.classList.contains('favorite-btn-remove')) {
+        const btn = e.target;
+        const itemId = btn.dataset.itemId;
+
+        fetch('/remove_favorite', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: `item_id=${encodeURIComponent(itemId)}`
+        })
           .then(response => response.json())
           .then(data => {
             btn.style.display = 'none';
@@ -351,8 +361,73 @@
             }
             loadFavorites();
           });
-        }
-      });
-    </script>
-  </body>
+      }
+    });
+  </script>
+
+  <!-- Markdown rendering libraries for article content -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked-highlight/lib/index.umd.min.js"></script>
+  <script>
+    // Global function to initialize markdown rendering after AJAX content injection
+    function initMarkdownRendering() {
+      const rawMarkdown = document.getElementById('raw-markdown');
+      const renderedContainer = document.getElementById('rendered-content');
+
+      if (!rawMarkdown || !renderedContainer) return;
+
+      // Check if already rendered (no spinner present)
+      if (!renderedContainer.querySelector('.spinner-border')) return;
+
+      try {
+        // Configure marked with highlight extension (modern API)
+        marked.use(markedHighlight.markedHighlight({
+          langPrefix: 'hljs language-',
+          highlight: function (code, lang) {
+            const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+            return hljs.highlight(code, { language }).value;
+          }
+        }));
+
+        marked.setOptions({
+          breaks: true,
+          gfm: true
+        });
+
+        // Render markdown
+        renderedContainer.innerHTML = marked.parse(rawMarkdown.textContent);
+        // Apply highlighting
+        hljs.highlightAll();
+      } catch (e) {
+        console.error("Markdown rendering failed:", e);
+        renderedContainer.innerHTML = '<div class="alert alert-danger">Failed to render article content.</div><pre>' + rawMarkdown.textContent + '</pre>';
+      }
+
+      // Setup copy button
+      const copyBtn = document.querySelector('.copy-btn');
+      if (copyBtn && !copyBtn.hasAttribute('data-initialized')) {
+        copyBtn.setAttribute('data-initialized', 'true');
+        copyBtn.addEventListener('click', function () {
+          navigator.clipboard.writeText(rawMarkdown.textContent).then(() => {
+            const originalText = copyBtn.innerHTML;
+            copyBtn.innerHTML = '✓ Copied!';
+            copyBtn.classList.remove('btn-outline-primary');
+            copyBtn.classList.add('btn-success');
+            setTimeout(() => {
+              copyBtn.innerHTML = originalText;
+              copyBtn.classList.remove('btn-success');
+              copyBtn.classList.add('btn-outline-primary');
+            }, 2000);
+          });
+        });
+      }
+    }
+
+    // Run on initial page load (for direct page views)
+    document.addEventListener('DOMContentLoaded', initMarkdownRendering);
+  </script>
+</body>
+
 </html>
