@@ -159,20 +159,24 @@
 <!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked-highlight/lib/index.umd.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const rawMarkdown = document.getElementById('raw-markdown').textContent;
         const renderedContainer = document.getElementById('rendered-content');
 
-        // Configure marked
-        marked.setOptions({
-            breaks: true, // Enable GFM line breaks
-            gfm: true,
+        // Configure marked with highlight extension (modern API)
+        marked.use(markedHighlight.markedHighlight({
+            langPrefix: 'hljs language-',
             highlight: function (code, lang) {
                 const language = hljs.getLanguage(lang) ? lang : 'plaintext';
                 return hljs.highlight(code, { language }).value;
-            },
-            langPrefix: 'hljs language-'
+            }
+        }));
+
+        marked.setOptions({
+            breaks: true, // Enable GFM line breaks
+            gfm: true
         });
 
         try {
