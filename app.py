@@ -98,9 +98,10 @@ def search_lyrics():
     if not query:
         return jsonify({"error": "Search query is required."}), 400
 
-    # Add to search history (initial entry -- metadata/title may be added later once we have the scraped result)
+    # Add to search history only for authenticated users
     user_id = current_user.id if current_user.is_authenticated else None
-    db_manager.add_to_search_history('lyrics', query, user_id=user_id)
+    if user_id:
+        db_manager.add_to_search_history('lyrics', query, user_id=user_id)
 
     # Try to get from DB first
     cached_result = db_manager.get_lyrics(query)
@@ -108,7 +109,7 @@ def search_lyrics():
         cached_result.pop('_id', None) # Remove MongoDB's internal _id field if present
 
         # If we have a cached title, add another history entry with metadata so UI shows the title immediately
-        if isinstance(cached_result, dict) and cached_result.get('title'):
+        if isinstance(cached_result, dict) and cached_result.get('title') and user_id:
             try:
                 db_manager.add_to_search_history('lyrics', query, metadata={'title': cached_result.get('title')}, user_id=user_id)
             except Exception:
@@ -147,16 +148,17 @@ def scrape_medium():
     if not url:
         return jsonify({"error": "Medium URL is required."}), 400
 
-    # Add to search history (initial entry)
+    # Add to search history only for authenticated users
     user_id = current_user.id if current_user.is_authenticated else None
-    db_manager.add_to_search_history('medium', url, user_id=user_id)
+    if user_id:
+        db_manager.add_to_search_history('medium', url, user_id=user_id)
 
     # Try to get from DB first
     cached_result = db_manager.get_article(url)
     if cached_result:
         cached_result.pop('_id', None)
         # Add a follow-up history entry with explicit title metadata so the history shows the article title immediately
-        if cached_result.get('title'):
+        if cached_result.get('title') and user_id:
             try:
                 db_manager.add_to_search_history('medium', url, metadata={'title': cached_result.get('title')}, user_id=user_id)
             except Exception:
@@ -175,20 +177,22 @@ def scrape_freedium():
     if not url:
         return jsonify({"error": "Freedium URL is required."}), 400
 
-    # Add to search history (initial entry)
-    db_manager.add_to_search_history('freedium', url)
+    # Add to search history only for authenticated users
+    user_id = current_user.id if current_user.is_authenticated else None
+    if user_id:
+        db_manager.add_to_search_history('freedium', url, user_id=user_id)
 
     # Try to get from DB first
     cached_result = db_manager.get_article(url)
     if cached_result:
         cached_result.pop('_id', None)
         # Add a follow-up history entry with explicit title metadata so the history shows the article title immediately
-        if cached_result.get('title'):
+        if cached_result.get('title') and user_id:
             try:
-                db_manager.add_to_search_history('freedium', url, metadata={'title': cached_result.get('title')})
+                db_manager.add_to_search_history('freedium', url, metadata={'title': cached_result.get('title')}, user_id=user_id)
             except Exception:
                 pass
-        cached_result['is_favorite'] = db_manager.is_favorite(url)
+        cached_result['is_favorite'] = db_manager.is_favorite(url, user_id=user_id)
         return jsonify({"status": "SUCCESS", "result": render_template('freedium_result.html', article=cached_result)})
 
     # If not in DB, start a background job

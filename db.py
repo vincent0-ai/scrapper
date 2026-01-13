@@ -112,6 +112,7 @@ class MongoDBManager:
 
     def add_to_search_history(self, search_type, query, metadata=None, user_id=None):
         if self.db is None: return
+        if not user_id: return  # Don't store history for unauthenticated users
         history_entry = {
             "type": search_type,  # 'lyrics', 'medium', 'simpmusic'
             "query": query,
@@ -123,16 +124,10 @@ class MongoDBManager:
 
     def get_search_history(self, search_type=None, user_id=None, limit=20):
         if self.db is None: return []
-        query_filter = {}
+        if not user_id: return []  # No history for unauthenticated users
+        query_filter = {"user_id": user_id}
         if search_type:
             query_filter["type"] = search_type
-        if user_id:
-            query_filter["user_id"] = user_id
-        else:
-            # If no user_id, decide if we show global (no user_id) or nothing
-            # Let's show anonymous history if user_id is None
-            query_filter["user_id"] = None
-            
         return list(self.db.search_history.find(query_filter).sort("timestamp", -1).limit(limit))
 
     def clear_search_history(self, search_type=None, user_id=None):
