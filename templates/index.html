@@ -29,7 +29,8 @@
                         <div class="card-body d-flex flex-column">
                             <form id="lyrics-form" class="w-100">
                                 <div class="mb-2">
-                                    <input type="text" name="query" class="form-control"
+                                    <label for="lyrics-query" class="visually-hidden">Song title or artist</label>
+                                    <input id="lyrics-query" type="text" name="query" class="form-control"
                                         placeholder="Song title or artist" required>
                                 </div>
                                 <button class="btn btn-primary w-100" type="submit">Search Lyrics</button>
@@ -47,7 +48,8 @@
                         <div class="card-body d-flex flex-column">
                             <form id="medium-form" class="w-100">
                                 <div class="mb-2">
-                                    <input type="url" name="url" class="form-control"
+                                    <label for="medium-url" class="visually-hidden">Medium.com article URL</label>
+                                    <input id="medium-url" type="url" name="url" class="form-control"
                                         placeholder="Medium.com article URL" required>
                                 </div>
                                 <button class="btn btn-primary w-100" type="submit">Scrape Article</button>
@@ -65,7 +67,8 @@
                         <div class="card-body d-flex flex-column">
                             <form id="freedium-form" class="w-100">
                                 <div class="mb-2">
-                                    <input type="url" name="url" class="form-control" placeholder="Freedium article URL"
+                                    <label for="freedium-url" class="visually-hidden">Freedium article URL</label>
+                                    <input id="freedium-url" type="url" name="url" class="form-control" placeholder="Freedium article URL"
                                         required>
                                 </div>
                                 <button class="btn btn-primary w-100" type="submit">Scrape Freedium</button>
@@ -85,7 +88,8 @@
                         <div class="card-body d-flex flex-column">
                             <form id="simpmusic-form" class="w-100">
                                 <div class="mb-2">
-                                    <select class="form-select" name="type">
+                                    <label for="simpmusic-type" class="visually-hidden">Search Type</label>
+                                    <select id="simpmusic-type" class="form-select" name="type">
                                         <option value="general">General</option>
                                         <option value="song" selected>Song</option>
                                         <option value="artist">Artist</option>
@@ -93,7 +97,8 @@
                                     </select>
                                 </div>
                                 <div class="mb-2">
-                                    <input type="text" name="query" class="form-control"
+                                    <label for="simpmusic-query" class="visually-hidden">Search Query</label>
+                                    <input id="simpmusic-query" type="text" name="query" class="form-control"
                                         placeholder="Artist, song, album..." required>
                                 </div>
                                 <button class="btn btn-success w-100" type="submit">Search Music</button>
