@@ -93,6 +93,12 @@ class MongoDBManager:
             return getattr(self, "_store", {}).get("lyrics", {}).get(query)
         return self.db.lyrics.find_one({"query": query})
 
+    def get_lyrics_multi(self, queries):
+        if getattr(self, "db", None) is None:
+            store = getattr(self, "_store", {}).get("lyrics", {})
+            return [store.get(q) for q in queries if q in store]
+        return list(self.db.lyrics.find({"query": {"$in": queries}}))
+
     def save_lyrics(self, query, lyrics_data):
         if getattr(self, "db", None) is None:
             self._store.setdefault("lyrics", {})[query] = {**lyrics_data, "query": query}
@@ -103,6 +109,12 @@ class MongoDBManager:
         if getattr(self, "db", None) is None:
             return getattr(self, "_store", {}).get("articles", {}).get(url)
         return self.db.articles.find_one({"url": url})
+
+    def get_articles(self, urls):
+        if getattr(self, "db", None) is None:
+            store = getattr(self, "_store", {}).get("articles", {})
+            return [store.get(u) for u in urls if u in store]
+        return list(self.db.articles.find({"url": {"$in": urls}}))
 
     def save_article(self, url, article_data):
         if getattr(self, "db", None) is None:
