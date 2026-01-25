@@ -63,8 +63,7 @@ class FreediumScraper:
             return {"error": "Failed to fetch article content."}
 
         article = self.parse_article(html)
-        title = article.get("title", "")
-        db_manager.save_article(title, article)
+        db_manager.save_article(url, article)
         return article
 
     def scrape_bulk(self, urls: List[str]) -> List[Dict]:
