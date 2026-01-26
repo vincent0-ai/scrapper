@@ -212,16 +212,15 @@ def job_status(job_id):
         if job.is_finished:
             result = job.result
             if result and not result.get("error"):
+                # Security check: verify if the current user owns this job
+                job_owner_id = job.meta.get('user_id')
+                if job_owner_id:
+                    if not current_user.is_authenticated or current_user.id != str(job_owner_id):
+                        return jsonify({'state': 'FAILED', 'status': 'Unauthorized access to job result.'}), 403
+
                 template_name = job.meta.get('template_name', 'lyrics_result.html')
                 if template_name == 'lyrics_result.html':
-                    user_id = job.meta.get('user_id')
                     try:
-                        # If user is different or not available, maybe we should be careful?
-                        # But this is an AJAX polling request, current_user should be available contextually if session cookie is present
-                        # However, RQ job runs in background, so 'current_user' is not available there. 
-                        # We use the user_id passed in meta to check is_favorite status potentially?
-                        # Actually, 'current_user' is available in THIS request (job_status).
-                        # So we should use current_user.id from the request context.
                         req_user_id = current_user.id if current_user.is_authenticated else None
                         result['is_favorite'] = db_manager.is_favorite(result.get('query', ''), user_id=req_user_id)
                     except:
