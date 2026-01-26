@@ -60,6 +60,7 @@ class MongoDBManager:
             # Index for search history - ordered by timestamp
             self.db.search_history.create_index([("timestamp", -1)])
             self.db.search_history.create_index([("type", 1), ("timestamp", -1)])
+            self.db.search_history.create_index([("user_id", 1), ("timestamp", -1)])
 
             # Index for favorites - ordered by timestamp
             self.db.favorites.create_index([("timestamp", -1)])
