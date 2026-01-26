@@ -25,8 +25,8 @@ def clean_recon_article(raw_text):
         r"Jul \d+|Aug \d+", # Date snippets in comments
         r"Reply\s+\d+\s+reply"
     ]
-    for pattern in ui_elements:
-        text = re.sub(pattern, '', text, flags=re.DOTALL | re.IGNORECASE)
+    combined_pattern = re.compile('|'.join(ui_elements), flags=re.DOTALL | re.IGNORECASE)
+    text = combined_pattern.sub('', text)
 
     # 3. Clean up excessive newlines and whitespace
     text = re.sub(r'\n\s*\n', '\n\n', text)
@@ -110,8 +110,8 @@ class MediumScraper:
             r"Reply\s+\d+\s+reply"
         ]
         import re
-        for pattern in ui_elements:
-            content = re.sub(pattern, '', content, flags=re.DOTALL | re.IGNORECASE)
+        combined_pattern = re.compile('|'.join(ui_elements), flags=re.DOTALL | re.IGNORECASE)
+        content = combined_pattern.sub('', content)
 
         # Clean up excessive newlines
         content = re.sub(r'\n{3,}', '\n\n', content)
