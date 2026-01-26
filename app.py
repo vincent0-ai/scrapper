@@ -321,11 +321,45 @@ def get_search_history():
     user_id = current_user.id if current_user.is_authenticated else None
     history = db_manager.get_search_history(search_type, user_id=user_id)
 
-    # Clean up for JSON serialization and compute a friendly display title
+    # Identify items needing lookup
+    article_urls = []
+    lyrics_queries = []
+
     for item in history:
         item.pop('_id', None)
         item['timestamp'] = item['timestamp'].isoformat() if hasattr(item['timestamp'], 'isoformat') else str(item['timestamp'])
 
+        # If metadata title is present, we don't need to look it up
+        meta_title = (item.get('metadata') or {}).get('title')
+        if not meta_title:
+            if item.get('type') in ('medium', 'freedium'):
+                article_urls.append(item.get('query'))
+            elif item.get('type') == 'lyrics':
+                lyrics_queries.append(item.get('query'))
+
+    # Batch fetch
+    articles_map = {}
+    if article_urls:
+        try:
+            articles = db_manager.get_articles(article_urls)
+            for a in articles:
+                if a and 'url' in a:
+                    articles_map[a['url']] = a.get('title')
+        except Exception:
+            pass
+
+    lyrics_map = {}
+    if lyrics_queries:
+        try:
+            lyrics_list = db_manager.get_lyrics_multi(lyrics_queries)
+            for l in lyrics_list:
+                if l and 'query' in l:
+                    lyrics_map[l['query']] = l.get('title')
+        except Exception:
+            pass
+
+    # Clean up for JSON serialization and compute a friendly display title
+    for item in history:
         # Prefer an explicit metadata.title if present
         meta_title = (item.get('metadata') or {}).get('title')
         if meta_title:
@@ -334,23 +368,17 @@ def get_search_history():
 
         # For article URLs, look up stored article title
         if item.get('type') in ('medium', 'freedium'):
-            try:
-                article = db_manager.get_article(item.get('query'))
-                if article and 'title' in article:
-                    item['display'] = article.get('title')
-                    continue
-            except Exception:
-                pass
+            title = articles_map.get(item.get('query'))
+            if title:
+                item['display'] = title
+                continue
 
         # For lyrics searches, look up stored lyrics title
         if item.get('type') == 'lyrics':
-            try:
-                lyrics = db_manager.get_lyrics(item.get('query'))
-                if lyrics and 'title' in lyrics:
-                    item['display'] = lyrics.get('title')
-                    continue
-            except Exception:
-                pass
+            title = lyrics_map.get(item.get('query'))
+            if title:
+                item['display'] = title
+                continue
 
         # Fallback to showing the raw query (URL or search text)
         item['display'] = item.get('query')
