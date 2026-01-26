@@ -19,15 +19,28 @@ TTL = 3600  # 1 hour
 if not os.path.exists(CACHE_DIR):
     os.makedirs(CACHE_DIR)
 
+# Cache for proxies to avoid reading file on every request
+_proxies_cache = None
+_proxies_mtime = 0
+
 def get_random_proxy():
-    """Reads proxies from proxies.txt and returns a random one."""
+    """Reads proxies from proxies.txt and returns a random one. Caches the list in memory."""
+    global _proxies_cache, _proxies_mtime
+    file_path = "proxies.txt"
     try:
-        with open("proxies.txt", "r") as f:
-            proxies = [line.strip() for line in f if line.strip()]
-        if proxies:
-            return random.choice(proxies)
+        # Check if file has changed
+        current_mtime = os.path.getmtime(file_path)
+        if _proxies_cache is None or current_mtime > _proxies_mtime:
+            with open(file_path, "r") as f:
+                _proxies_cache = [line.strip() for line in f if line.strip()]
+            _proxies_mtime = current_mtime
+
+        if _proxies_cache:
+            return random.choice(_proxies_cache)
     except FileNotFoundError:
         print("proxies.txt not found. Continuing without proxy.")
+        _proxies_cache = None # Clear cache if file is gone
+        _proxies_mtime = 0
     return None
 
 def _key_to_file(url):
