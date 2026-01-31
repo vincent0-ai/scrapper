@@ -1,8 +1,10 @@
 import os
 try:
     from pymongo import MongoClient
+    from bson.objectid import ObjectId
 except Exception:
     MongoClient = None
+    ObjectId = None
 try:
     from dotenv import load_dotenv
     load_dotenv()
@@ -83,7 +85,6 @@ class MongoDBManager:
 
     def get_user_by_id(self, user_id):
         if self.db is None: return None
-        from bson.objectid import ObjectId
         try:
             return self.db.users.find_one({"_id": ObjectId(user_id)})
         except:
