@@ -22,12 +22,20 @@ if not os.path.exists(CACHE_DIR):
 # Cache for proxies to avoid reading file on every request
 _proxies_cache = None
 _proxies_mtime = 0
+_proxies_last_check = 0
 
 def get_random_proxy():
     """Reads proxies from proxies.txt and returns a random one. Caches the list in memory."""
-    global _proxies_cache, _proxies_mtime
+    global _proxies_cache, _proxies_mtime, _proxies_last_check
     file_path = "proxies.txt"
+
+    # Rate limit the file system check
+    now = time.time()
+    if _proxies_cache is not None and (now - _proxies_last_check < 5):
+        return random.choice(_proxies_cache)
+
     try:
+        _proxies_last_check = now
         # Check if file has changed
         current_mtime = os.path.getmtime(file_path)
         if _proxies_cache is None or current_mtime > _proxies_mtime:
