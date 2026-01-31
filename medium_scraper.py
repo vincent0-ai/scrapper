@@ -10,6 +10,16 @@ from db import db_manager # Import the database manager
 
 import re
 
+UI_ELEMENTS_PATTERNS = [
+    r"Sign up\s+Sign in",
+    r"Top highlight",
+    r"Listen\s+Share",
+    r"Write a response.*", # End of article sections
+    r"Help\s+Status\s+About.*",
+    r"Reply\s+\d+\s+reply"
+]
+COMBINED_UI_PATTERN = re.compile('|'.join(UI_ELEMENTS_PATTERNS), flags=re.DOTALL | re.IGNORECASE)
+
 def clean_recon_article(raw_text):
     # 1. Remove tags (strip HTML tags)
     text = re.sub(r'<[^>]+>', '', raw_text)
@@ -101,17 +111,7 @@ class MediumScraper:
         # We don't want to strip all tags because markdown might still have some or use <> for URLs
         # But we do want to remove the specific UI noise.
         
-        ui_elements = [
-            r"Sign up\s+Sign in", 
-            r"Top highlight", 
-            r"Listen\s+Share",
-            r"Write a response.*", # End of article sections
-            r"Help\s+Status\s+About.*",
-            r"Reply\s+\d+\s+reply"
-        ]
-        import re
-        combined_pattern = re.compile('|'.join(ui_elements), flags=re.DOTALL | re.IGNORECASE)
-        content = combined_pattern.sub('', content)
+        content = COMBINED_UI_PATTERN.sub('', content)
 
         # Clean up excessive newlines
         content = re.sub(r'\n{3,}', '\n\n', content)
