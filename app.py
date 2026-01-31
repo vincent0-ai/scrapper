@@ -139,7 +139,12 @@ def search_simpmusic():
     if not query:
         return jsonify({"error": "Search query is required."}), 400
 
-    job = q.enqueue(worker_search_simpmusic, query, search_type, job_timeout=3600, meta={'template_name': 'lyrics_result.html'})
+    # Add to search history only for authenticated users
+    user_id = current_user.id if current_user.is_authenticated else None
+    if user_id:
+        db_manager.add_to_search_history('simpmusic', query, user_id=user_id)
+
+    job = q.enqueue(worker_search_simpmusic, query, search_type, job_timeout=3600, meta={'template_name': 'lyrics_result.html', 'user_id': user_id})
     return jsonify({"status": "PENDING", "task_id": job.get_id()})
 
 @app.route('/scrape_medium', methods=['POST'])
