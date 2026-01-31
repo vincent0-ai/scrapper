@@ -41,12 +41,18 @@ def search_song(query):
     """
     Searches for a song across multiple sites and returns the first found lyrics.
     """
-    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+    executor = concurrent.futures.ThreadPoolExecutor(max_workers=5)
+    try:
         future_to_site = {executor.submit(search_site, query, site, config): site for site, config in SITES.items()}
         for future in concurrent.futures.as_completed(future_to_site):
             result = future.result()
             if result:
+                # Found a result, return immediately without waiting for other threads
+                executor.shutdown(wait=False, cancel_futures=True)
                 return result
+    finally:
+        # Ensure executor is shut down, but don't wait for pending tasks
+        executor.shutdown(wait=False)
     return None
 
 def search_site(query, site_name, site_config):
