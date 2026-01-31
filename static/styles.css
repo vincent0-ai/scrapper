@@ -110,7 +110,6 @@ input.form-control, select.form-select{
 
 /* Search history / sidebar tweaks to avoid overlap and improve wrapping */
 #search-history{
-    max-height: 86vh;
     overflow:auto;
 }
 
