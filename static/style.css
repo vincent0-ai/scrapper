@@ -41,36 +41,40 @@ pre {
 
 /* Sidebar Styles */
 .sidebar-fixed {
-    position: sticky;
-    top: 0;
-    width: 280px;
-    height: 100vh;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    flex-shrink: 0;
+    position: sticky !important;
+    top: 0 !important;
+    width: 280px !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    flex-shrink: 0 !important;
 }
 
 .sidebar-content {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    min-height: 0;
-    height: calc(100vh - 2rem);
-    overflow: hidden;
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    height: calc(100vh - 2rem) !important;
+    max-height: calc(100vh - 2rem) !important;
+    overflow: hidden !important;
 }
 
 #search-history {
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow-y: auto;
-    overflow-x: hidden;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    max-height: calc(100vh - 180px) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
     padding-right: 4px;
 }
 
 /* Make sure list-group inside search-history doesn't break scrolling */
 #search-history .list-group {
-    max-height: none;
+    max-height: none !important;
+    overflow: visible !important;
 }
 
 /* Custom scrollbar for search history */

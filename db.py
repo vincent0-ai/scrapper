@@ -136,7 +136,7 @@ class MongoDBManager:
         }
         self.db.search_history.insert_one(history_entry)
 
-    def get_search_history(self, search_type=None, user_id=None, limit=20):
+    def get_search_history(self, search_type=None, user_id=None, limit=50):
         if self.db is None: return []
         if not user_id: return []  # No history for unauthenticated users
         query_filter = {"user_id": user_id}
