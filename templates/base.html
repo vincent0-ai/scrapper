@@ -153,8 +153,7 @@
       <!-- Sidebar with Search History (fixed width) -->
       <!-- Hidden on small screens; mobile uses the offcanvas button instead -->
       {% if current_user.is_authenticated %}
-      <div class="sidebar-fixed bg-light p-3 d-none d-lg-block"
-        style="min-height: 100vh; border-right: 1px solid #ddd;">
+      <div class="sidebar-fixed bg-light p-3 d-none d-lg-block" style="border-right: 1px solid #ddd;">
         <div class="sidebar-content">
           <h5 class="mb-2">📋 Search History</h5>
           <div id="search-history" class="mt-2">
@@ -262,9 +261,9 @@
             // Icon selection based on type
             let iconHtml = '<i class="bi bi-search"></i>';
             if (item.type === 'lyrics' || item.type === 'simpmusic') {
-                iconHtml = '<i class="bi bi-music-note-beamed"></i>';
+              iconHtml = '<i class="bi bi-music-note-beamed"></i>';
             } else if (item.type === 'medium' || item.type === 'freedium') {
-                iconHtml = '<i class="bi bi-newspaper"></i>';
+              iconHtml = '<i class="bi bi-newspaper"></i>';
             }
 
             html += `
@@ -393,11 +392,11 @@
             let iconClass = 'bi-file-text';
             let bgClass = 'bg-primary';
             if (fav.type === 'lyrics' || fav.type === 'simpmusic') {
-                iconClass = 'bi-music-note-beamed';
-                bgClass = 'bg-success';
+              iconClass = 'bi-music-note-beamed';
+              bgClass = 'bg-success';
             } else if (fav.type === 'medium' || fav.type === 'freedium') {
-                iconClass = 'bi-newspaper';
-                bgClass = 'bg-dark';
+              iconClass = 'bi-newspaper';
+              bgClass = 'bg-dark';
             }
 
             html += `

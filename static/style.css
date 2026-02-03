@@ -40,18 +40,49 @@ pre {
 }
 
 /* Sidebar Styles */
-.sidebar-content {
+.sidebar-fixed {
     position: sticky;
-    top: 20px;
+    top: 0;
+    height: 100vh;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
-    max-height: calc(100vh - 40px);
+}
+
+.sidebar-content {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    max-height: calc(100vh - 2rem);
 }
 
 #search-history {
     flex: 1;
     min-height: 0;
+    max-height: calc(100vh - 150px);
     overflow-y: auto;
+    padding-right: 4px;
+}
+
+/* Custom scrollbar for search history */
+#search-history::-webkit-scrollbar {
+    width: 6px;
+}
+
+#search-history::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+#search-history::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+#search-history::-webkit-scrollbar-thumb:hover {
+    background: #a1a1a1;
 }
 
 .sidebar-content h5 {
