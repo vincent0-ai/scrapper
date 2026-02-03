@@ -10,6 +10,7 @@ honcho
 Flask-Login
 werkzeug
 markdownify
+APScheduler # For scheduled background tasks
 # Note: This project now requires a running Redis server.
 # You can install it with:
 # sudo apt-get install redis-server (for Debian/Ubuntu)

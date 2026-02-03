@@ -45,6 +45,39 @@ redis_url = os.getenv('REDIS_URL')
 conn = redis.from_url(redis_url)
 q = Queue(connection=conn)
 
+# --- APScheduler Setup for Scheduled Tasks ---
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.interval import IntervalTrigger
+import atexit
+
+def scheduled_proxy_update():
+    """Background task to update proxies every 2 hours."""
+    try:
+        print("[Scheduler] Starting scheduled proxy update...")
+        # Enqueue the proxy update job to be handled by the worker
+        job = q.enqueue(worker_update_proxies, job_timeout=3600)
+        print(f"[Scheduler] Proxy update job enqueued: {job.get_id()}")
+    except Exception as e:
+        print(f"[Scheduler] Error scheduling proxy update: {e}")
+
+# Initialize the scheduler
+scheduler = BackgroundScheduler()
+scheduler.add_job(
+    func=scheduled_proxy_update,
+    trigger=IntervalTrigger(hours=2),
+    id='proxy_update_job',
+    name='Update proxies every 2 hours',
+    replace_existing=True
+)
+
+# Only start scheduler if not in reloader subprocess (avoids duplicate jobs)
+if not app.debug or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+    scheduler.start()
+    print("[Scheduler] APScheduler started - Proxies will update every 2 hours")
+
+# Shut down the scheduler when exiting the app
+atexit.register(lambda: scheduler.shutdown(wait=False))
+
 @app.route('/')
 def index():
     return render_template('index.html')

@@ -153,13 +153,15 @@
       <!-- Sidebar with Search History (fixed width) -->
       <!-- Hidden on small screens; mobile uses the offcanvas button instead -->
       {% if current_user.is_authenticated %}
-      <div class="sidebar-fixed bg-light p-3 d-none d-lg-block" style="border-right: 1px solid #ddd;">
-        <div class="sidebar-content">
-          <h5 class="mb-2">📋 Search History</h5>
-          <div id="search-history" class="mt-2">
+      <div class="sidebar-fixed bg-light p-3 d-none d-lg-block"
+        style="border-right: 1px solid #ddd; width: 280px; height: 100vh; position: sticky; top: 0; flex-shrink: 0;">
+        <div class="sidebar-content" style="display: flex; flex-direction: column; height: calc(100vh - 2rem);">
+          <h5 class="mb-2" style="flex-shrink: 0;">📋 Search History</h5>
+          <div id="search-history" class="mt-2" style="flex: 1; overflow-y: auto; min-height: 0;">
             <p class="text-muted small">No searches yet</p>
           </div>
-          <button class="btn btn-sm btn-outline-danger mt-2 w-100" id="clear-history-btn">Clear History</button>
+          <button class="btn btn-sm btn-outline-danger mt-2 w-100" id="clear-history-btn" style="flex-shrink: 0;">Clear
+            History</button>
         </div>
       </div>
       {% endif %}

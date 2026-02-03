@@ -43,27 +43,34 @@ pre {
 .sidebar-fixed {
     position: sticky;
     top: 0;
+    width: 280px;
     height: 100vh;
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    flex-shrink: 0;
 }
 
 .sidebar-content {
-    position: relative;
     display: flex;
     flex-direction: column;
     flex: 1;
     min-height: 0;
-    max-height: calc(100vh - 2rem);
+    height: calc(100vh - 2rem);
+    overflow: hidden;
 }
 
 #search-history {
-    flex: 1;
+    flex: 1 1 auto;
     min-height: 0;
-    max-height: calc(100vh - 150px);
     overflow-y: auto;
+    overflow-x: hidden;
     padding-right: 4px;
+}
+
+/* Make sure list-group inside search-history doesn't break scrolling */
+#search-history .list-group {
+    max-height: none;
 }
 
 /* Custom scrollbar for search history */
@@ -83,6 +90,24 @@ pre {
 
 #search-history::-webkit-scrollbar-thumb:hover {
     background: #a1a1a1;
+}
+
+/* Firefox scrollbar */
+#search-history {
+    scrollbar-width: thin;
+    scrollbar-color: #c1c1c1 #f1f1f1;
+}
+
+/* Container row should use flexbox for sidebar layout */
+.container-fluid>.row {
+    display: flex;
+    flex-wrap: nowrap;
+}
+
+/* Main content area should take remaining space */
+.main-fluid {
+    flex: 1;
+    min-width: 0;
 }
 
 .sidebar-content h5 {
@@ -189,11 +214,13 @@ h1 {
     font-size: clamp(1.5rem, 5vw, 2.5rem);
 }
 
-h3, h4 {
+h3,
+h4 {
     font-size: clamp(1.1rem, 4vw, 1.5rem);
 }
 
-h5, h6 {
+h5,
+h6 {
     font-size: clamp(1rem, 3vw, 1.25rem);
 }
 
@@ -493,15 +520,16 @@ h5, h6 {
         margin-bottom: 1rem !important;
     }
 }
+
 /* Favorites Widget Styles */
 .favorite-card {
     transition: transform 0.2s ease, box-shadow 0.2s ease;
-    border: 1px solid rgba(0,0,0,0.05) !important;
+    border: 1px solid rgba(0, 0, 0, 0.05) !important;
 }
 
 .favorite-card:hover {
     transform: translateY(-3px);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1) !important;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1) !important;
 }
 
 .icon-square {
