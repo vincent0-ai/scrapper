@@ -14,11 +14,13 @@ UI_ELEMENTS_PATTERNS = [
     r"Sign up\s+Sign in",
     r"Top highlight",
     r"Listen\s+Share",
-    r"Write a response.*", # End of article sections
-    r"Help\s+Status\s+About.*",
-    r"Reply\s+\d+\s+reply"
+    r"Write a response", # End of article sections
+    r"Help\s+Status\s+About",
+    r"Reply\s+\d+\s+reply",
+    r"Careers\s+Blog\s+Privacy\s+Terms\s+Text to speech\s+Teams",
+    r"Some people who read this story also read"
 ]
-COMBINED_UI_PATTERN = re.compile('|'.join(UI_ELEMENTS_PATTERNS), flags=re.DOTALL | re.IGNORECASE)
+COMBINED_UI_PATTERN = re.compile('|'.join(UI_ELEMENTS_PATTERNS), flags=re.IGNORECASE)
 
 def clean_recon_article(raw_text):
     # 1. Remove tags (strip HTML tags)
@@ -30,12 +32,14 @@ def clean_recon_article(raw_text):
         r"Top highlight", 
         r"Listen\s+Share",
         r"\d+\s+\d+\s+19", # Social metrics like claps/comments
-        r"Write a response.*", # End of article sections
-        r"Help\s+Status\s+About.*",
+        r"Write a response", # End of article sections
+        r"Help\s+Status\s+About",
         r"Jul \d+|Aug \d+", # Date snippets in comments
-        r"Reply\s+\d+\s+reply"
+        r"Reply\s+\d+\s+reply",
+        r"Careers\s+Blog\s+Privacy\s+Terms\s+Text to speech\s+Teams",
+        r"Some people who read this story also read"
     ]
-    combined_pattern = re.compile('|'.join(ui_elements), flags=re.DOTALL | re.IGNORECASE)
+    combined_pattern = re.compile('|'.join(ui_elements), flags=re.IGNORECASE)
     text = combined_pattern.sub('', text)
 
     # 3. Clean up excessive newlines and whitespace
