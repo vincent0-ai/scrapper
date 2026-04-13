@@ -56,7 +56,7 @@ def scheduled_proxy_update():
         print("[Scheduler] Starting scheduled proxy update...")
         # Enqueue the proxy update job to be handled by the worker
         job = q.enqueue(worker_update_proxies, job_timeout=3600)
-        print(f"[Scheduler] Proxy update job enqueued: {job.get_id()}")
+        print(f"[Scheduler] Proxy update job enqueued: {job.id}")
     except Exception as e:
         print(f"[Scheduler] Error scheduling proxy update: {e}")
 
@@ -163,7 +163,7 @@ def search_lyrics():
     # If not in DB, start a background job
     # Enqueue the actual worker function, not the Flask route handler
     job = q.enqueue(scrape_lyrics, query, job_timeout=3600, meta={'template_name': 'lyrics_result.html', 'user_id': user_id})
-    return jsonify({"status": "PENDING", "task_id": job.get_id()})
+    return jsonify({"status": "PENDING", "task_id": job.id})
 
 @app.route('/search_simpmusic', methods=['POST'])
 def search_simpmusic():
@@ -178,7 +178,7 @@ def search_simpmusic():
         db_manager.add_to_search_history('simpmusic', query, user_id=user_id)
 
     job = q.enqueue(worker_search_simpmusic, query, search_type, job_timeout=3600, meta={'template_name': 'lyrics_result.html', 'user_id': user_id})
-    return jsonify({"status": "PENDING", "task_id": job.get_id()})
+    return jsonify({"status": "PENDING", "task_id": job.id})
 
 @app.route('/scrape_medium', methods=['POST'])
 def scrape_medium():
@@ -206,7 +206,7 @@ def scrape_medium():
 
     # If not in DB, start a background job
     job = q.enqueue(worker_scrape_medium, url, job_timeout=3600, meta={'template_name': 'medium_result.html', 'user_id': user_id})
-    return jsonify({"status": "PENDING", "task_id": job.get_id()})
+    return jsonify({"status": "PENDING", "task_id": job.id})
 
 
 @app.route('/scrape_freedium', methods=['POST'])
@@ -235,13 +235,13 @@ def scrape_freedium():
 
     # If not in DB, start a background job
     job = q.enqueue(worker_scrape_freedium, url, job_timeout=3600, meta={'template_name': 'freedium_result.html'})
-    return jsonify({"status": "PENDING", "task_id": job.get_id()})
+    return jsonify({"status": "PENDING", "task_id": job.id})
 
 @app.route('/update_proxies', methods=['POST'])
 def update_proxies_route():
     # Enqueue the proxy update job
     job = q.enqueue(worker_update_proxies, job_timeout=3600, meta={'template_name': 'proxy_result.html'})
-    return jsonify({"status": "PENDING", "task_id": job.get_id()})
+    return jsonify({"status": "PENDING", "task_id": job.id})
 
 @app.route('/status/<job_id>')
 def job_status(job_id):
