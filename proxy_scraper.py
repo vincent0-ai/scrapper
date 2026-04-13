@@ -19,12 +19,16 @@ def scrape_and_save_proxies(url="https://free-proxy-list.net/en/"):
             print("Could not find proxy table on the page.")
             return {"error": "Could not find proxy table on the page."}
 
+        lines = []
+        for row in table.tbody.find_all("tr"):
+            cols = row.find_all("td")
+            if len(cols) > 1:
+                lines.append(f"{cols[0].text.strip()}:{cols[1].text.strip()}")
+
+        count = len(lines)
         with open("proxies.txt", "w", encoding="utf-8") as f:
-            for row in table.tbody.find_all("tr"):
-                cols = row.find_all("td")
-                if len(cols) > 1:
-                    f.write(f"{cols[0].text.strip()}:{cols[1].text.strip()}\n")
-                    count += 1
+            if lines:
+                f.write("\n".join(lines) + "\n")
         print(f"{count} proxies saved to proxies.txt")
         return {"message": f"Successfully saved {count} proxies to proxies.txt."}
     except requests.exceptions.RequestException as e:
