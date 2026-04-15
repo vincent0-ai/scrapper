@@ -142,12 +142,13 @@ class MediumScraper:
         
         return {"title": title_text, "author": author_text, "published": publish_text, "tags": tags, "content": content.strip()}
 
-    def scrape_single(self, url: str) -> Dict:
+    def scrape_single(self, url: str, skip_cache: bool = False) -> Dict:
         # Check DB first
-        cached_article = db_manager.get_article(url)
-        if cached_article:
-            cached_article.pop('_id', None) # Remove MongoDB's internal _id field
-            return cached_article
+        if not skip_cache:
+            cached_article = db_manager.get_article(url)
+            if cached_article:
+                cached_article.pop('_id', None) # Remove MongoDB's internal _id field
+                return cached_article
 
         # If not in DB, scrape using the common utility
         html_content, _ = fetch_with_flaresolverr(url) # Use the new method
@@ -162,8 +163,21 @@ class MediumScraper:
 
     def scrape_bulk(self, urls: List[str]) -> List[Dict]:
         results: List[Dict] = []
+
+        # Batch DB query
+        cached_articles = db_manager.get_articles(urls)
+
+        cached_urls = set()
+        for article in cached_articles:
+            if article:
+                article.pop('_id', None) # Remove MongoDB's internal _id field
+                results.append(article)
+                cached_urls.add(article.get('url'))
+
+        uncached_urls = [u for u in urls if u not in cached_urls]
+
         with ThreadPoolExecutor(max_workers=self.concurrency) as executor:
-            futures = {executor.submit(self.scrape_single, u): u for u in urls}
+            futures = {executor.submit(self.scrape_single, u, skip_cache=True): u for u in uncached_urls}
             for f, u in futures.items():
                 try:
                     results.append(f.result())
