@@ -24,8 +24,8 @@ def scrape_and_save_proxies(url="https://free-proxy-list.net/en/"):
             cols = row.find_all("td")
             if len(cols) > 1:
                 lines.append(f"{cols[0].text.strip()}:{cols[1].text.strip()}")
+                count += 1
 
-        count = len(lines)
         with open("proxies.txt", "w", encoding="utf-8") as f:
             if lines:
                 f.write("\n".join(lines) + "\n")

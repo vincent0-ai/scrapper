@@ -14,11 +14,13 @@ UI_ELEMENTS_PATTERNS = [
     r"Sign up\s+Sign in",
     r"Top highlight",
     r"Listen\s+Share",
-    r"Write a response.*", # End of article sections
-    r"Help\s+Status\s+About.*",
-    r"Reply\s+\d+\s+reply"
+    r"Write a response", # End of article sections
+    r"Help\s+Status\s+About",
+    r"Reply\s+\d+\s+reply",
+    r"Careers\s+Blog\s+Privacy\s+Terms\s+Text to speech\s+Teams",
+    r"Some people who read this story also read"
 ]
-COMBINED_UI_PATTERN = re.compile('|'.join(UI_ELEMENTS_PATTERNS), flags=re.DOTALL | re.IGNORECASE)
+COMBINED_UI_PATTERN = re.compile('|'.join(UI_ELEMENTS_PATTERNS), flags=re.IGNORECASE)
 
 def clean_recon_article(raw_text):
     # 1. Remove tags (strip HTML tags)
@@ -30,12 +32,14 @@ def clean_recon_article(raw_text):
         r"Top highlight", 
         r"Listen\s+Share",
         r"\d+\s+\d+\s+19", # Social metrics like claps/comments
-        r"Write a response.*", # End of article sections
-        r"Help\s+Status\s+About.*",
+        r"Write a response", # End of article sections
+        r"Help\s+Status\s+About",
         r"Jul \d+|Aug \d+", # Date snippets in comments
-        r"Reply\s+\d+\s+reply"
+        r"Reply\s+\d+\s+reply",
+        r"Careers\s+Blog\s+Privacy\s+Terms\s+Text to speech\s+Teams",
+        r"Some people who read this story also read"
     ]
-    combined_pattern = re.compile('|'.join(ui_elements), flags=re.DOTALL | re.IGNORECASE)
+    combined_pattern = re.compile('|'.join(ui_elements), flags=re.IGNORECASE)
     text = combined_pattern.sub('', text)
 
     # 3. Clean up excessive newlines and whitespace
@@ -80,10 +84,30 @@ class MediumScraper:
                 # The proxy format for FlareSolverr is http://user:pass@host:port
                 # Assuming proxies do not require authentication.
                 payload["proxy"] = f"http://{proxy}"
-            r = requests.post(self.flaresolverr_url, json=payload, timeout=120)
-            r.raise_for_status()
-            data = r.json()
-            return data.get("solution", {}).get("response", "")
+            if self.flaresolverr_url:
+                try:
+                    r = requests.post(self.flaresolverr_url, json=payload, timeout=120)
+                    r.raise_for_status()
+                    data = r.json()
+                    if not isinstance(data, dict):
+                        print(
+                            f"FlareSolverr fallback failed in MediumScraper: "
+                            f"invalid JSON response shape (expected dict, got {type(data).__name__})"
+                        )
+                        return ""
+                    solution = data.get("solution")
+                    if not isinstance(solution, dict):
+                        print(
+                            f"FlareSolverr fallback failed in MediumScraper: "
+                            f"invalid solution payload shape (expected dict, got {type(solution).__name__})"
+                        )
+                        return ""
+                    return solution.get("response", "")
+                except (requests.exceptions.RequestException, ValueError) as e:
+                    print(f"FlareSolverr fallback failed in MediumScraper: {e}")
+            else:
+                print("FlareSolverr URL not configured, skipping FlareSolverr fallback in MediumScraper.")
+            return ""
 
     def parse_article(self, html: str) -> Dict:
         soup = BeautifulSoup(html, "html.parser")
@@ -118,12 +142,13 @@ class MediumScraper:
         
         return {"title": title_text, "author": author_text, "published": publish_text, "tags": tags, "content": content.strip()}
 
-    def scrape_single(self, url: str) -> Dict:
+    def scrape_single(self, url: str, skip_cache: bool = False) -> Dict:
         # Check DB first
-        cached_article = db_manager.get_article(url)
-        if cached_article:
-            cached_article.pop('_id', None) # Remove MongoDB's internal _id field
-            return cached_article
+        if not skip_cache:
+            cached_article = db_manager.get_article(url)
+            if cached_article:
+                cached_article.pop('_id', None) # Remove MongoDB's internal _id field
+                return cached_article
 
         # If not in DB, scrape using the common utility
         html_content, _ = fetch_with_flaresolverr(url) # Use the new method
@@ -138,8 +163,21 @@ class MediumScraper:
 
     def scrape_bulk(self, urls: List[str]) -> List[Dict]:
         results: List[Dict] = []
+
+        # Batch DB query
+        cached_articles = db_manager.get_articles(urls)
+
+        cached_urls = set()
+        for article in cached_articles:
+            if article:
+                article.pop('_id', None) # Remove MongoDB's internal _id field
+                results.append(article)
+                cached_urls.add(article.get('url'))
+
+        uncached_urls = [u for u in urls if u not in cached_urls]
+
         with ThreadPoolExecutor(max_workers=self.concurrency) as executor:
-            futures = {executor.submit(self.scrape_single, u): u for u in urls}
+            futures = {executor.submit(self.scrape_single, u, skip_cache=True): u for u in uncached_urls}
             for f, u in futures.items():
                 try:
                     results.append(f.result())
