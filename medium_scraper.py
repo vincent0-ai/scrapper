@@ -86,9 +86,19 @@ class MediumScraper:
                     r.raise_for_status()
                     data = r.json()
                     if not isinstance(data, dict):
-                        print("FlareSolverr fallback failed in MediumScraper: invalid JSON response shape")
+                        print(
+                            f"FlareSolverr fallback failed in MediumScraper: "
+                            f"invalid JSON response shape (expected dict, got {type(data).__name__})"
+                        )
                         return ""
-                    return data.get("solution", {}).get("response", "")
+                    solution = data.get("solution")
+                    if not isinstance(solution, dict):
+                        print(
+                            f"FlareSolverr fallback failed in MediumScraper: "
+                            f"invalid solution payload shape (expected dict, got {type(solution).__name__})"
+                        )
+                        return ""
+                    return solution.get("response", "")
                 except (requests.exceptions.RequestException, ValueError) as e:
                     print(f"FlareSolverr fallback failed in MediumScraper: {e}")
             else:
