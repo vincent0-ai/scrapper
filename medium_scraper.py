@@ -80,10 +80,17 @@ class MediumScraper:
                 # The proxy format for FlareSolverr is http://user:pass@host:port
                 # Assuming proxies do not require authentication.
                 payload["proxy"] = f"http://{proxy}"
-            r = requests.post(self.flaresolverr_url, json=payload, timeout=120)
-            r.raise_for_status()
-            data = r.json()
-            return data.get("solution", {}).get("response", "")
+            if self.flaresolverr_url:
+                try:
+                    r = requests.post(self.flaresolverr_url, json=payload, timeout=120)
+                    r.raise_for_status()
+                    data = r.json()
+                    return data.get("solution", {}).get("response", "")
+                except requests.exceptions.RequestException as e:
+                    print(f"FlareSolverr fallback failed in MediumScraper: {e}")
+            else:
+                print("FlareSolverr URL not configured, skipping FlareSolverr fallback in MediumScraper.")
+            return ""
 
     def parse_article(self, html: str) -> Dict:
         soup = BeautifulSoup(html, "html.parser")

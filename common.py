@@ -84,19 +84,23 @@ def fetch_with_flaresolverr(url):
         if proxy:
             payload["proxy"] = f"http://{proxy}"
 
-        try:
-            # Increased timeout to 60s to exceed FlareSolverr's maxTimeout of 30s
-            r = requests.post(FLARE, json=payload, timeout=60)
-            r.raise_for_status()
-            data = r.json()
-            if data.get("status") == "ok":
-                html, cookies = data["solution"]["response"], data["solution"]["cookies"]
-                _save_cache(url, html, cookies)
-                return html, cookies
-            # If FlareSolverr returns not ok, fallback to direct request
-            print(f"FlareSolverr returned non-ok status (attempt {attempt+1}/{max_retries}), falling back to direct request")
-        except requests.exceptions.RequestException as e:
-            print(f"Error communicating with FlareSolverr (attempt {attempt+1}/{max_retries}): {e}, falling back to direct request")
+        if FLARE:
+            try:
+                # Increased timeout to 60s to exceed FlareSolverr's maxTimeout of 30s
+                r = requests.post(FLARE, json=payload, timeout=60)
+                r.raise_for_status()
+                data = r.json()
+                if data.get("status") == "ok":
+                    html, cookies = data["solution"]["response"], data["solution"]["cookies"]
+                    _save_cache(url, html, cookies)
+                    return html, cookies
+                # If FlareSolverr returns not ok, fallback to direct request
+                print(f"FlareSolverr returned non-ok status (attempt {attempt+1}/{max_retries}), falling back to direct request")
+            except requests.exceptions.RequestException as e:
+                print(f"Error communicating with FlareSolverr (attempt {attempt+1}/{max_retries}): {e}, falling back to direct request")
+        else:
+            if attempt == 0:
+                print("FlareSolverr URL not configured, skipping FlareSolverr attempt.")
 
         # Fallback to direct request
         try:
