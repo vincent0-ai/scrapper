@@ -90,13 +90,19 @@ def fetch_with_flaresolverr(url):
                 r = requests.post(FLARE, json=payload, timeout=60)
                 r.raise_for_status()
                 data = r.json()
+                if not isinstance(data, dict):
+                    raise ValueError("Invalid JSON response shape from FlareSolverr")
                 if data.get("status") == "ok":
-                    html, cookies = data["solution"]["response"], data["solution"]["cookies"]
-                    _save_cache(url, html, cookies)
-                    return html, cookies
-                # If FlareSolverr returns not ok, fallback to direct request
-                print(f"FlareSolverr returned non-ok status (attempt {attempt+1}/{max_retries}), falling back to direct request")
-            except requests.exceptions.RequestException as e:
+                    solution = data.get("solution")
+                    if isinstance(solution, dict) and "response" in solution and "cookies" in solution:
+                        html, cookies = solution["response"], solution["cookies"]
+                        _save_cache(url, html, cookies)
+                        return html, cookies
+                    print(f"FlareSolverr returned malformed solution payload (attempt {attempt+1}/{max_retries}), falling back to direct request")
+                else:
+                    # If FlareSolverr returns not ok, fallback to direct request
+                    print(f"FlareSolverr returned non-ok status (attempt {attempt+1}/{max_retries}), falling back to direct request")
+            except (requests.exceptions.RequestException, ValueError) as e:
                 print(f"Error communicating with FlareSolverr (attempt {attempt+1}/{max_retries}): {e}, falling back to direct request")
         else:
             if attempt == 0:

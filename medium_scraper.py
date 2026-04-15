@@ -85,8 +85,15 @@ class MediumScraper:
                     r = requests.post(self.flaresolverr_url, json=payload, timeout=120)
                     r.raise_for_status()
                     data = r.json()
-                    return data.get("solution", {}).get("response", "")
-                except requests.exceptions.RequestException as e:
+                    if not isinstance(data, dict):
+                        print("FlareSolverr fallback failed in MediumScraper: invalid JSON response shape")
+                        return ""
+                    solution = data.get("solution")
+                    if not isinstance(solution, dict):
+                        print("FlareSolverr fallback failed in MediumScraper: invalid solution payload shape")
+                        return ""
+                    return solution.get("response", "")
+                except (requests.exceptions.RequestException, ValueError) as e:
                     print(f"FlareSolverr fallback failed in MediumScraper: {e}")
             else:
                 print("FlareSolverr URL not configured, skipping FlareSolverr fallback in MediumScraper.")
