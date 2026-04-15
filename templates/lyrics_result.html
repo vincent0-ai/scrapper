@@ -3,43 +3,51 @@
 {% block title %}Lyrics for {{ result.title }}{% endblock %}
 
 {% block content %}
-<div class="card">
+<div class="card card-lyrics" style="animation: fadeInUp 0.4s cubic-bezier(0.16,1,0.3,1) both;">
     <div class="card-header">
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-2">
-            <div class="flex-grow-1">
-                <h3 class="mb-2">{{ result.title }}</h3>
+            <div class="flex-grow-1" style="min-width: 0;">
+                <h3 class="mb-1" style="word-break: break-word;">{{ result.title }}</h3>
                 {% if result.artist %}
-                    <p class="text-muted mb-1">🎤 {{ result.artist }}</p>
+                <p class="text-muted mb-1">
+                    <i class="bi bi-mic me-1"></i>{{ result.artist }}
+                </p>
                 {% endif %}
-                <small>📌 Source: {{ result.source }}</small>
+                <small class="text-muted">
+                    <i class="bi bi-pin-angle me-1"></i>Source: {{ result.source }}
+                </small>
             </div>
-            <div class="d-flex gap-2 flex-wrap justify-content-end">
-                <button class="btn btn-sm btn-outline-warning favorite-btn" 
-                        data-type="lyrics" 
-                        data-item-id="{{ result.query }}" 
-                        data-title="{{ result.title }} - {{ result.artist }}"
-                        style="{% if result.is_favorite %}display: none;{% endif %}">
-                    ☆ Favorite
+            <div class="d-flex gap-2 flex-wrap justify-content-end" style="flex-shrink: 0;">
+                <button class="btn btn-sm btn-outline-warning favorite-btn"
+                    data-type="lyrics"
+                    data-item-id="{{ result.query }}"
+                    data-title="{{ result.title }} - {{ result.artist }}"
+                    style="{% if result.is_favorite %}display: none;{% endif %}">
+                    <i class="bi bi-star me-1"></i>Favorite
                 </button>
-                <button class="btn btn-sm btn-warning favorite-btn-remove" 
-                        data-type="lyrics" 
-                        data-item-id="{{ result.query }}"
-                        style="{% if not result.is_favorite %}display: none;{% endif %}">
-                    ★ Favorited
+                <button class="btn btn-sm btn-warning favorite-btn-remove"
+                    data-type="lyrics"
+                    data-item-id="{{ result.query }}"
+                    style="{% if not result.is_favorite %}display: none;{% endif %}">
+                    <i class="bi bi-star-fill me-1"></i>Favorited
                 </button>
             </div>
         </div>
     </div>
     <div class="card-body">
-        <pre id="lyrics-text">{{ result.lyrics }}</pre>
+        <pre id="lyrics-text" style="max-height: 65vh; overflow-y: auto;">{{ result.lyrics }}</pre>
     </div>
     <div class="card-footer">
         <div class="d-grid gap-2 d-sm-flex flex-wrap">
-            <button id="copy-lyrics-btn" class="btn btn-info flex-sm-grow-1">📋 Copy Lyrics</button>
+            <button id="copy-lyrics-btn" class="btn btn-info flex-sm-grow-1">
+                <i class="bi bi-clipboard me-1"></i>Copy Lyrics
+            </button>
             <form action="/download_lyrics" method="post" class="flex-sm-grow-1">
                 <input type="hidden" name="title" value="{{ result.title }}">
                 <input type="hidden" name="lyrics" value="{{ result.lyrics }}">
-                <button type="submit" class="btn btn-success w-100">⬇️ Download</button>
+                <button type="submit" class="btn btn-success w-100">
+                    <i class="bi bi-download me-1"></i>Download
+                </button>
             </form>
         </div>
     </div>
