@@ -88,11 +88,7 @@ class MediumScraper:
                     if not isinstance(data, dict):
                         print("FlareSolverr fallback failed in MediumScraper: invalid JSON response shape")
                         return ""
-                    solution = data.get("solution")
-                    if not isinstance(solution, dict):
-                        print("FlareSolverr fallback failed in MediumScraper: invalid solution payload shape")
-                        return ""
-                    return solution.get("response", "")
+                    return data.get("solution", {}).get("response", "")
                 except (requests.exceptions.RequestException, ValueError) as e:
                     print(f"FlareSolverr fallback failed in MediumScraper: {e}")
             else:
