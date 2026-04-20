@@ -15,3 +15,4 @@ APScheduler # For scheduled background tasks
 # You can install it with:
 # sudo apt-get install redis-server (for Debian/Ubuntu)
 # or follow instructions at https://redis.io/docs/getting-started/installation/
+zipp>=3.19.1 # not directly required, pinned by Snyk to avoid a vulnerability
